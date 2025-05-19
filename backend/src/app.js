@@ -24,4 +24,9 @@ app.use(express.static("public"));
 // to communicate with cookie
 app.use(cookieParser());
 
+// import routes
+const userRouter = require("./routes/userRoutes");
+
+app.use("/api/v1/user/", userRouter);
+
 module.exports = app;
