@@ -2,7 +2,6 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
-const eventRouter = require("../src/routes/eventRoutes.js");
 dotenv.config();
 
 const app = express();
