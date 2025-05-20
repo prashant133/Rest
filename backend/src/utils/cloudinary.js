@@ -1,32 +1,42 @@
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
-// Configuration
+// 🔴 Replace these with your actual Cloudinary credentials
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// uploading file to cloudinary
-const uploadOnCloudinary = async (localFilePath, folderName) => {
+const uploadOnCloudinary = async (localFilePath, folderName = "uploads") => {
   try {
-    // Check if the file is in the local space
-    if (!localFilePath) return "File is not on local space";
+    if (!localFilePath) throw new Error("File path is missing");
 
-    // Upload the file now, specifying the folder
-    const uploadFile = await cloudinary.uploader.upload(localFilePath, {
+    const uploadResult = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
-      folder: folderName, // Specify the folder where you want to upload the file
+      folder: folderName,
     });
 
-    // Delete the local file after upload
-    fs.unlinkSync(localFilePath);
-    return uploadFile;
+    fs.unlinkSync(localFilePath); // Cleanup local file
+    return uploadResult;
   } catch (error) {
-    fs.unlinkSync(localFilePath); // Remove the locally saved temp file as the operation failed
-    return null;
+    try {
+      fs.unlinkSync(localFilePath); // Attempt cleanup
+    } catch (_) {}
+    throw new Error("Cloudinary upload failed: " + error.message);
   }
 };
 
-module.exports = uploadOnCloudinary;
+const deleteImage = async (publicId) => {
+  if (!publicId) return;
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    throw new Error(`Cloudinary delete failed: ${error.message}`);
+  }
+};
+
+module.exports = {
+  uploadOnCloudinary,
+  deleteImage,
+};

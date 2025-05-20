@@ -1,55 +1,50 @@
 const multer = require("multer");
-const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const fs = require("fs");
 
-// Defining storage options for multer
+// Ensure uploads folder exists
+const uploadsDir = "uploads";
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
 const storage = multer.diskStorage({
-  // Specifies the destination directory where files should be saved
-  destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, "..", "public", "temp");
-
-    // Check if the directory exists, if not, create it
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true }); // Creates the directory if it doesn't exist
-    }
-
-    cb(null, uploadPath); // Saves uploaded files to the '.public/temp' folder
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
   },
-  // Specifies the filename of the uploaded file
-  filename: function (req, file, cb) {
-    // Generate a unique filename using UUID and file extension
-    const uniqueSuffix = uuidv4() + path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix); // Combines the field name with the unique suffix
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + path.extname(file.originalname);
+    cb(null, uniqueName);
   },
+  
 });
 
-// Defining file filter to validate file types
-const fileFilter = (req, file, cb) => {
-  // Allowed image file types (jpeg, jpg, png, gif)
-  const allowedTypes = /jpeg|jpg|png|gif/;
+// Define allowed file types
+const allowedFileTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "video/mov",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
-  // Check if the file extension matches allowed types (case-insensitive)
-  const extname = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase()
-  );
-
-  // Check if the MIME type matches allowed types
-  const mimeType = allowedTypes.test(file.mimetype);
-
-  // If both checks pass, allow the file, otherwise reject it
-  if (extname && mimeType) {
-    return cb(null, true); // File is allowed
-  } else {
-    cb(new Error("Only image files are allowed!"), false); // Reject non-image files
-  }
-};
-
-// Creating the multer upload middleware with storage and file filter options
 const upload = multer({
-  storage: storage, // Specifies the storage options
-  fileFilter: fileFilter, // Specifies the file filter function
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limits file size to 5MB
+  storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100 MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (allowedFileTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only images, videos, PDFs, and Word documents are allowed."));
+    }
+  },
 });
 
 module.exports = upload;
