@@ -1,4 +1,5 @@
 const OTP = require("../model/otpModel");
+const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const generateOTP = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");

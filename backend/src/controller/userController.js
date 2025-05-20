@@ -203,9 +203,47 @@ const verifyUserOTPLogin = asyncHandler(async (req, res) => {
   }
 });
 
+const logoutUserController = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    throw new ApiError(400, "No refresh Token found");
+  }
+
+  const user = await User.findOne({ refreshToken });
+
+  if (!user) {
+    // Still clear cookies for safety
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    return res.status(200).json(new ApiResponse(200, {}, "User logged out"));
+  }
+
+  user.refreshToken = null;
+  await user.save({ validateBeforeSave: false });
+
+  // Clear cookies
+  res
+    .clearCookie("accessToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    })
+    .clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "user logged out successfully"));
+});
+
 module.exports = {
   registerUserController,
   generateAccessTokenAndRefreshToken,
   sendOTPVerificationLogin,
   verifyUserOTPLogin,
+  logoutUserController,
 };
