@@ -1,6 +1,7 @@
 const asyncHandler = require("../utils/asyncHandler");
 const Event = require("../model/eventModel");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
+const validateUploadedFiles=require("../utils/valiadateUploadedFiles")
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const mongoose = require("mongoose");
@@ -25,32 +26,8 @@ const createEventContoller = asyncHandler(async (req, res) => {
   }
 
   // Validate file uploads
-  if (!req.files || req.files.length < 1 || req.files.length > 10) {
-    throw new ApiError(400, "At least one file is required (max 10)");
-  }
+   validateUploadedFiles(req.files); 
 
-  // Debug log for uploaded files
-  console.log("Uploaded files paths:", req.files.map(file => file.path));
-
-  // Validate file type limits
-  const fileCounts = {
-    images: 0,
-    videos: 0,
-    documents: 0,
-  };
-
-  req.files.forEach((file) => {
-    if (file.mimetype.startsWith("image/")) fileCounts.images++;
-    else if (file.mimetype.startsWith("video/")) fileCounts.videos++;
-    else if (
-      file.mimetype === "application/pdf" ||
-      file.mimetype.includes("msword")
-    ) fileCounts.documents++;
-  });
-
-  if (fileCounts.images > 5) throw new ApiError(400, "Maximum 5 images allowed");
-  if (fileCounts.videos > 3) throw new ApiError(400, "Maximum 3 videos allowed");
-  if (fileCounts.documents > 2) throw new ApiError(400, "Maximum 2 document allowed");
 
   // Upload files to Cloudinary
   const files = [];
@@ -146,34 +123,13 @@ const updateEventController = asyncHandler(async (req, res) => {
   if (title) event.title = title;
   if (description) event.description = description;
 
+
+  //validatefiletype
   if (req.files && req.files.length > 0) {
-    if (req.files.length > 10) {
-      throw new ApiError(400, "Cannot upload more than 10 files");
-    }
 
-    // Debug log for uploaded files
-    console.log("Uploaded files paths for update:", req.files.map(file => file.path));
-
-    // Validate file type limits
-    const fileCounts = {
-      images: 0,
-      videos: 0,
-      documents: 0,
-    };
-
-    req.files.forEach((file) => {
-      if (file.mimetype.startsWith("image/")) fileCounts.images++;
-      else if (file.mimetype.startsWith("video/")) fileCounts.videos++;
-      else if (
-        file.mimetype === "application/pdf" ||
-        file.mimetype.includes("msword")
-      ) fileCounts.documents++;
-    });
-
-    if (fileCounts.images > 5) throw new ApiError(400, "Maximum 5 images allowed");
-    if (fileCounts.videos > 3) throw new ApiError(400, "Maximum 3 videos allowed");
-    if (fileCounts.documents > 2) throw new ApiError(400, "Maximum 2 document allowed");
-
+    validateUploadedFiles(req.files);
+  
+    //uploads on clouinary
     const files = [];
     for (const file of req.files) {
       try {
