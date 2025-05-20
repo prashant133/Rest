@@ -1,11 +1,8 @@
 const EventPost = require("../model/eventModel.js");
 const { uploadOnCloudinary, deleteImage } = require("../utils/cloudinary.js");
+const ApiResponse = require("../utils/ApiResponse.js");
+const ApiError = require("../utils/ApIError.js");
 
-
-const handleError = (res, error, status = 500) => {
-  console.error(error);
-  res.status(status).json({ error: error.message });
-};
 
 const validatePostData = ({ title, description }) => {
   if (!title || !description) {
@@ -31,9 +28,9 @@ const createEventPost = async (req, res) => {
     });
 
     await newEventPost.save();
-    res.status(201).json(newEventPost);
+    res.status(201).json(new ApiResponse(201, newEventPost, "Post created successfully"));
   } catch (err) {
-    handleError(res, err, err.message.includes("required") || err.message.includes("characters") ? 400 : 500);
+    ApiError(res, err, err.message.includes("required") || err.message.includes("characters") ? 400 : 500);
   }
 };
 
@@ -45,7 +42,7 @@ const createEventPost = async (req, res) => {
     }
     res.status(200).json(post);
   } catch (err) {
-    handleError(res, err);
+    ApiError(res, err);
   }
 };
 
@@ -62,9 +59,9 @@ const createEventPost = async (req, res) => {
     }
 
     await EventPost.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Post deleted successfully" });
+    res.status(200).json(new ApiResponse(200, null, "Post deleted successfully"));
   } catch (err) {
-    handleError(res, err);
+    ApiError(res, err);
   }
 };
 
@@ -93,27 +90,27 @@ const createEventPost = async (req, res) => {
     post.img = imageUrl;
 
     await post.save();
-    res.status(200).json(post);
+    res.status(200).json(new ApiResponse(200, post, "Post updated successfully"));
   } catch (err) {
-    handleError(res, err, err.message.includes("required") || err.message.includes("characters") ? 400 : 500);
+    ApiError(res, err, err.message.includes("required") || err.message.includes("characters") ? 400 : 500);
   }
 };
 
  const getUserEventPosts = async (req, res) => {
   try {
     const posts = await EventPost.find().sort({ createdAt: -1 });
-    res.status(200).json(posts);
+    res.status(200).json(new ApiResponse(200, posts, "User posts fetched successfully"));
   } catch (err) {
-    handleError(res, err);
+    ApiError(res, err);
   }
 };
 
  const getEventFeedPosts = async (req, res) => {
   try {
     const posts = await EventPost.find().sort({ createdAt: -1 });
-    res.status(200).json(posts || []);
+    res.status(200).json(new ApiResponse(200, posts, "Event feed posts fetched successfully"));
   } catch (err) {
-    handleError(res, err);
+    ApiError(res, err);
   }
 };
 module.exports = {

@@ -2,7 +2,7 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
-const eventRouter = require("./routes/event");
+const eventRouter = require("../src/routes/eventRoutes.js");
 dotenv.config();
 
 const app = express();
@@ -28,6 +28,6 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 //routes
-app.use("/api/users", eventRouter);
+app.use("/api/events", eventRouter);
 
 module.exports = app;
