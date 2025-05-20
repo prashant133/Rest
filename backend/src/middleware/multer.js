@@ -16,7 +16,35 @@ const storage = multer.diskStorage({
     const uniqueName = Date.now() + path.extname(file.originalname);
     cb(null, uniqueName);
   },
+  
 });
 
-const upload = multer({ storage });
+// Define allowed file types
+const allowedFileTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "video/mov",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100 MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (allowedFileTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only images, videos, PDFs, and Word documents are allowed."));
+    }
+  },
+});
+
 module.exports = upload;
