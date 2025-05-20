@@ -1,123 +1,66 @@
-const EventPost = require("../model/eventModel.js");
-const { uploadOnCloudinary, deleteImage } = require("../utils/cloudinary.js");
-const ApiResponse = require("../utils/ApiResponse.js");
-const ApiError = require("../utils/ApIError.js");
+const asyncHandler = require("../utils/asyncHandler");
+const Event = require("../model/eventModel");
+const uploadOnCloudinary = require("../utils/cloudinary");
+const ApiError = require("../utils/ApiError");
+const ApiResponse = require("../utils/ApiResponse");
 
+// crate event
+const createEventContoller = asyncHandler(async (req, res) => {
+  const { title, description } = req.body;
 
-const validatePostData = ({ title, description }) => {
+  //   validate the data
   if (!title || !description) {
-    throw new Error("Title and description are required");
+    throw new ApiError(400, "All fields are required");
   }
-  if (description.length > 500) {
-    throw new Error("Description must be less than 500 characters");
+
+  //   check for the existing event
+  const existingEvent = await Event.findOne({ title });
+
+  if (existingEvent) {
+    throw new ApiError(400, "event already exists");
   }
-};
 
-const createEventPost = async (req, res) => {
-  try {
-    const { title, description } = req.body;
-    validatePostData({ title, description });
-
-    const localFilePath = req.file?.path;
-    const uploadedImage = await uploadOnCloudinary(localFilePath);
-
-    const newEventPost = new EventPost({
-      title,
-      description,
-      img: uploadedImage?.secure_url || null,
-    });
-
-    await newEventPost.save();
-    res.status(201).json(new ApiResponse(201, newEventPost, "Post created successfully"));
-  } catch (err) {
-    ApiError(res, err, err.message.includes("required") || err.message.includes("characters") ? 400 : 500);
+  if (!req.files || req.files.length < 1 || req.files.length > 5) {
+    throw new ApiError(400, "At least one image should be uploaded (max 5)");
   }
-};
 
- const getEventPost = async (req, res) => {
-  try {
-    const post = await EventPost.findById(req.params.id);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+  const imageUrls = [];
+  for (const file of req.files) {
+    const result = await uploadOnCloudinary(file.path, "Event Images");
+
+    if (result && result.secure_url) {
+      imageUrls.push(result.secure_url);
     }
-    res.status(200).json(post);
-  } catch (err) {
-    ApiError(res, err);
   }
-};
 
- const deleteEventPost = async (req, res) => {
-  try {
-    const post = await EventPost.findById(req.params.id);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    if (post.img) {
-      const imgId = post.img.split("/").pop().split(".")[0];
-      await deleteImage(imgId);
-    }
-
-    await EventPost.findByIdAndDelete(req.params.id);
-    res.status(200).json(new ApiResponse(200, null, "Post deleted successfully"));
-  } catch (err) {
-    ApiError(res, err);
+  if (imageUrls.length === 0) {
+    throw new ApiError(400, "NO image urls");
   }
-};
 
- const editEventPost = async (req, res) => {
-  try {
-    const { title, description, img } = req.body;
-    const postId = req.params.id;
-    validatePostData({ title, description });
+  const event = await Event.create({
+    title,
+    description,
+    images: imageUrls,
+  });
 
-    const post = await EventPost.findById(postId);
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
+  //   created event
+  const createdEvent = await Event.findById(event._id);
 
-    let imageUrl = post.img;
-    if (img && img !== post.img) {
-      if (post.img) {
-        const imgId = post.img.split("/").pop().split(".")[0];
-        await deleteImage(imgId);
-      }
-      imageUrl = await uploadOnCloudinary(img);
-    }
+  return res
+    .status(201)
+    .json(new ApiResponse(201, createdEvent, "Event created successfully"));
+});
 
-    post.title = title;
-    post.description = description;
-    post.img = imageUrl;
+// get all event
+const getAllEventController = asyncHandler(async (req, res) => {
+  const event = await Event.find({}).sort({ createdAt: -1 });
 
-    await post.save();
-    res.status(200).json(new ApiResponse(200, post, "Post updated successfully"));
-  } catch (err) {
-    ApiError(res, err, err.message.includes("required") || err.message.includes("characters") ? 400 : 500);
+  if (!event.length) {
+    throw new ApiError(400, "No event found");
   }
-};
+  return res
+    .status(200)
+    .json(new ApiResponse(200, event, "All events fetched"));
+});
 
- const getUserEventPosts = async (req, res) => {
-  try {
-    const posts = await EventPost.find().sort({ createdAt: -1 });
-    res.status(200).json(new ApiResponse(200, posts, "User posts fetched successfully"));
-  } catch (err) {
-    ApiError(res, err);
-  }
-};
- 
- const getEventFeedPosts = async (req, res) => {
-  try {
-    const posts = await EventPost.find().sort({ createdAt: -1 });
-    res.status(200).json(new ApiResponse(200, posts, "Event feed posts fetched successfully"));
-  } catch (err) {
-    ApiError(res, err);
-  }
-};
-module.exports = {
-  createEventPost,
-  getEventPost,
-  deleteEventPost,
-  editEventPost,
-  getUserEventPosts,
-  getEventFeedPosts,
-};
+module.exports = { createEventContoller, getAllEventController };

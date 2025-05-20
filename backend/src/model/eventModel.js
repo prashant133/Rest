@@ -1,24 +1,33 @@
 const mongoose = require("mongoose");
 
-const eventPostSchema = mongoose.Schema(
+const eventSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
     },
     description: {
       type: String,
-      maxLength: 500,
-    },
-    img: {
-      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },  
+    images: {
+      type: [String], //cloudinary
+      validate: {
+        validator: function (value) {
+          return value.length <= 5; //only 5 image
+        },
+        message: "you can only upload upto 5 images",
+      },
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const EventPost = mongoose.model("EventPost", eventPostSchema);
+const Event = mongoose.model("Event", eventSchema);
 
-module.exports = EventPost;
+module.exports = Event;
