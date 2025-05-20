@@ -104,7 +104,7 @@ const createEventPost = async (req, res) => {
     ApiError(res, err);
   }
 };
-
+ 
  const getEventFeedPosts = async (req, res) => {
   try {
     const posts = await EventPost.find().sort({ createdAt: -1 });
