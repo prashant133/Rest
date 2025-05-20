@@ -1,6 +1,6 @@
     const asyncHandler = require("../utils/asyncHandler");
     const Gallery = require("../model/galleryModel");
-    const { uploadOnCloudinary, deleteImage } = require("../utils/cloudinary");
+    const uploadFileWithFolderLogic=require("../helper/cloudinaryHepler")
     const ApiError = require("../utils/ApiError");
     const ApiResponse = require("../utils/ApiResponse");
     const mongoose = require("mongoose");
@@ -26,7 +26,7 @@
     const images = [];
     for (const file of req.files) {
         try {
-        const result = await uploadOnCloudinary(file.path, "Gallery Images");
+        const result = await uploadFileWithFolderLogic(file.path, file.mimetype, "Gallery");
         console.log(`Cloudinary upload result for ${file.path}:`, result);
         if (result && result.secure_url) {
             images.push({

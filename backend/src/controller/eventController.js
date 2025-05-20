@@ -1,13 +1,12 @@
 const asyncHandler = require("../utils/asyncHandler");
 const Event = require("../model/eventModel");
-const { uploadOnCloudinary } = require("../utils/cloudinary");
 const validateUploadedFiles=require("../utils/valiadateUploadedFiles")
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
+const {uploadFileWithFolderLogic}=require("../helper/cloudinaryHepler")
 const mongoose = require("mongoose");
 
-// Debug log to verify import
-console.log("Cloudinary import:", require("../utils/cloudinary"));
+
 
 // Create event (Admin only)
 const createEventContoller = asyncHandler(async (req, res) => {
@@ -33,7 +32,7 @@ const createEventContoller = asyncHandler(async (req, res) => {
   const files = [];
   for (const file of req.files) {
     try {
-      const result = await uploadOnCloudinary(file.path, "Event Files");
+      const result = await uploadFileWithFolderLogic(file.path,file.mimetype,"Event Files");
       console.log(`Cloudinary upload result for ${file.path}:`, result);
       if (result && result.secure_url) {
         files.push({
@@ -133,7 +132,7 @@ const updateEventController = asyncHandler(async (req, res) => {
     const files = [];
     for (const file of req.files) {
       try {
-        const result = await uploadOnCloudinary(file.path, "Event Files");
+        const result = await uploadFileWithFolderLogic(file.path,file.mimetype,"Event Files");
         console.log(`Cloudinary upload result for ${file.path}:`, result);
         if (result && result.secure_url) {
           files.push({

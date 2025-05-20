@@ -5,9 +5,7 @@ function validateUploadedFiles(files, maxFiles = 10) {
   if (!files || files.length < 1 || files.length > maxFiles) {
     throw new ApiError(400, `At least one file is required (max ${maxFiles})`);
   }
-  
-  // Debug log for uploaded files
-    console.log("Uploaded files paths for update:", req.files.map(file => file.path));
+
 
   const fileCounts = {
     images: 0,
