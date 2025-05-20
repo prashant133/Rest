@@ -14,14 +14,19 @@ const eventSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
-    },  
-    images: {
-      type: [String], //cloudinary
+    },
+    files: {
+      type: [
+        {
+          url: { type: String, required: true },
+          type: { type: String, required: true },
+        },
+      ],
       validate: {
         validator: function (value) {
-          return value.length <= 5; //only 5 image
+          return value.length <= 10; // Max 5 files
         },
-        message: "you can only upload upto 5 images",
+        message: "You can only upload up to 10 files",
       },
     },
   },

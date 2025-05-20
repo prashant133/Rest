@@ -1,6 +1,8 @@
 const cookieParser = require("cookie-parser");
+const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
+dotenv.config();
 
 const app = express();
 
@@ -27,8 +29,10 @@ app.use(cookieParser());
 // import routes
 const userRouter = require("./routes/userRoutes");
 const eventRouter = require("./routes/eventRoutes")
+const galleryRouter=require("./routes/galeryRoutes")
 
 app.use("/api/v1/user/", userRouter);
 app.use("/api/v1/event/", eventRouter);
+app.use("/api/v1/gallery/",galleryRouter);
 
 module.exports = app;
