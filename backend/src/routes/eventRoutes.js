@@ -9,6 +9,7 @@ const {
   getEventController,
   updateEventController,
   deleteEventController,
+  deleteEventFileController,
 } = require("../controller/eventController");
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.get("/get-event/:id", getEventController);
 router.post("/create-event", upload.array("files", 10), createEventContoller);
 router.put("/update-event/:id", upload.array("files", 10), updateEventController);
 router.delete("/delete-event/:id",  deleteEventController);
+router.delete("/delete-event-file/:id/:fileUrl", deleteEventFileController);
 
 module.exports = router;
