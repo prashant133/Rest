@@ -1,22 +1,32 @@
-const mongoose = require("mongoose");
+// model/galleryModel.js
+const mongoose = require('mongoose');
 
-const gallerySchema = new mongoose.Schema(
-  {
-    url: { type: String, required: true },
-    type: {
-      type: String,
-      required: true,
-      enum: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-    },
-    publicId: { type: String, required: true },
-    title: {
-      type: String,
-      trim: true,
-      lowercase: true,
-    },
+const gallerySchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true,
   },
-  { timestamps: true }
-);
+  images: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        required: true,
+      },
+      publicId: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const Gallery = mongoose.model("Gallery", gallerySchema);
-module.exports = Gallery;
+module.exports = mongoose.model('Gallery', gallerySchema);
