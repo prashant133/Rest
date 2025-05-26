@@ -15,6 +15,12 @@ const eventSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    date: { 
+      type: String 
+    }, 
+    location: { 
+      type: String 
+    },
     files: {
       type: [
         {

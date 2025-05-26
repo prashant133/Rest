@@ -7,6 +7,7 @@ const {
   deleteImageController,
   getAllImagesController,
   getImageByIdController,
+  deletePostController,
 } = require("../controller/galleryController");
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.get("/get-image/:id", getImageByIdController);
 // Admin-only routes
 router.post("/upload-images", upload.array("images", 10), uploadImagesController);
 router.delete("/delete-image/:id", deleteImageController);
+router.delete('/delete-post/:id',  deletePostController);
 
 module.exports = router;
