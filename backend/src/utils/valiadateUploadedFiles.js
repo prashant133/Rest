@@ -18,7 +18,8 @@ function validateUploadedFiles(files, maxFiles = 10) {
     else if (file.mimetype.startsWith("video/")) fileCounts.videos++;
     else if (
       file.mimetype === "application/pdf" ||
-      file.mimetype.includes("msword")
+      file.mimetype.includes("msword") ||
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ) fileCounts.documents++;
   });
 
