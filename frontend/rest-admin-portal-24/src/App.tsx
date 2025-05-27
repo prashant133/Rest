@@ -11,6 +11,7 @@ import Gallery from "./pages/Gallery";
 import Setting from "./pages/Setting";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import VerifyOtp from "./pages/verifyOtp";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -25,6 +26,7 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/login" element={<Index />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <Dashboard />

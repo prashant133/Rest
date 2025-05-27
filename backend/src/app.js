@@ -35,4 +35,17 @@ app.use("/api/v1/user/", userRouter);
 app.use("/api/v1/event/", eventRouter);
 app.use("/api/v1/gallery/",galleryRouter);
 
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  console.error("Error in request:", err);
+  res.status(statusCode).json({
+    success: false,
+    message,
+    statusCode,
+  });
+});
+
+
 module.exports = app;

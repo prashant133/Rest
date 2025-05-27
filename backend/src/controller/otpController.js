@@ -8,24 +8,23 @@ const sendOTPController = asyncHandler(async (email) => {
   if (!email) {
     throw new ApiError(400, "Email is not defined");
   }
-  // 3. Generate OTP
+  // Generate OTP
   const otp = generateOTP();
-  console.log(otp);
+  console.log("Generated OTP:", otp);
 
-  // 4. Delete previous OTPs for this email
+  // Delete previous OTPs for this email
   await OTP.deleteMany({ email });
 
-  // 5. Create new OTP record
-
+  // Create new OTP record
   const otpRecord = await OTP.create({ email, otp });
 
-  // 6. Prepare response data
+  // Prepare response data
   const responseData = {
     otp: otpRecord.otp,
     email: email,
   };
 
-  // 7. Send email
+  // Send email
   try {
     await sendEmail({
       to: email,
@@ -33,7 +32,7 @@ const sendOTPController = asyncHandler(async (email) => {
       text: `Your OTP code is ${otp}. It will expire at ${otpRecord.expiry}`,
       html: `<strong>Your OTP code is ${otp}. It will expire at ${otpRecord.expiry}</strong>`,
     });
-
+    console.log("Email sent successfully:", email);
     return responseData;
   } catch (error) {
     console.error("Email sending failed:", error);
@@ -44,31 +43,32 @@ const sendOTPController = asyncHandler(async (email) => {
 });
 
 const verifyOTPController = asyncHandler(async (otp) => {
+  console.log("Verifying OTP:", otp);
   if (!otp) {
-    throw new ApiError(400, "All fields are required");
+    console.log("No OTP provided");
+    throw new ApiError(400, "OTP is required");
   }
 
   const otpRecord = await OTP.findOne({ otp });
   if (!otpRecord) {
+    console.log("OTP not found for:", otp);
     throw new ApiError(404, "OTP not found or expired");
   }
 
-  // Compare the OTP string properly
   if (otpRecord.otp !== otp) {
+    console.log("OTP mismatch:", otpRecord.otp, "vs", otp);
     throw new ApiError(400, "OTP does not match");
   }
 
   if (otpRecord.expiry < new Date()) {
+    console.log("OTP expired for:", otp);
     await OTP.findByIdAndDelete(otpRecord._id);
     throw new ApiError(400, "OTP has expired");
   }
 
-  // Get the email
-  const email = otpRecord.email;
-  console.log(email);
-
-  return {
-    email: email,
-  };
+  const result = { email: otpRecord.email };
+  console.log("Returning OTP verification result:", result);
+  return result;
 });
+
 module.exports = { sendOTPController, verifyOTPController };
