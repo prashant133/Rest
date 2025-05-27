@@ -5,26 +5,17 @@ const ApiResponse = require("../utils/ApiResponse");
 const { sendOTPController, verifyOTPController } = require("./otpController");
 const OTP = require("../model/otpModel");
 
-// generate refresh token and access token
+// Generate refresh and access tokens
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
-    // Retrieve the user by ID
     const user = await User.findById(userId);
-
-    // Check if user exists
     if (!user) {
       throw new ApiError(404, "User not found");
     }
-
-    // Generate tokens
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
-
-    // Save the refresh token in the database
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
-
-    // Return tokens
     return { accessToken, refreshToken };
   } catch (error) {
     console.error("Error generating tokens:", error);
@@ -120,70 +111,79 @@ const registerUserController = asyncHandler(async (req, res) => {
 });
 
 const sendOTPVerificationLogin = asyncHandler(async (req, res) => {
-  const { employeeId, email, password } = req.body;
+  const { email, password } = req.body;
 
-  // validate the data
-  if (!(!employeeId || !email)) {
-    throw new ApiError(400, "All fields are required");
+  // Validate input
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password are required");
   }
 
-  // check for the existing user
-  const user = await User.findOne({ $or: [{ employeeId }, { email }] });
-
+  // Check for existing user
+  const user = await User.findOne({ email });
   if (!user) {
-    throw new ApiError(400, "No such error");
+    throw new ApiError(400, "User does not exist");
   }
 
-  // check if password is correct
+  // Verify password
   const isPasswordValid = await user.isPasswordCorrect(password);
-
   if (!isPasswordValid) {
-    throw new ApiError(400, "Password is not correct");
+    throw new ApiError(400, "Invalid password");
   }
 
+  // Send OTP for any valid user
   try {
     await sendOTPController(user.email);
-
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "OTP sent for verification"));
   } catch (error) {
-    // Handle any errors from sendOptController
-    throw new ApiError(error.statusCode || 500, error.message);
+    throw new ApiError(error.statusCode || 500, error.message || "Failed to send OTP");
   }
 });
 
 const verifyUserOTPLogin = asyncHandler(async (req, res) => {
   const { otp } = req.body;
 
+  if (!otp) {
+    throw new ApiError(400, "OTP is required");
+  }
+
   try {
-    await verifyOTPController(otp);
+    const otpRecord = await verifyOTPController(otp);
+    console.log("OTP record from verifyOTPController:", otpRecord);
+    if (!otpRecord || !otpRecord.email) {
+      console.log("Invalid or missing OTP record for OTP:", otp);
+      throw new ApiError(404, "Invalid or expired OTP");
+    }
 
-    const otpRecord = await OTP.findOne({ otp });
-    let email = otpRecord.email;
+    const email = otpRecord.email;
 
-    // 3. Find user by email
+    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       throw new ApiError(404, "User not found");
     }
 
-    // 4. Generate tokens
-    const { refreshToken, accessToken } =
-      await generateAccessTokenAndRefreshToken(user._id);
+    // For admin frontend: Check if user is admin
+    if (req.headers['x-admin-frontend'] === 'true' && user.role !== "admin") {
+      throw new ApiError(403, "This interface is for admin users only");
+    }
 
-    // 5. Get user data without sensitive info
-    const loggedInUser = await User.findById(user._id).select(
-      "-password -refreshToken"
-    );
+    // Generate tokens
+    const { accessToken, refreshToken } = await generateAccessTokenAndRefreshToken(user._id);
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
-    // 6. Set cookie options
+    // Set cookie options
     const options = {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: "Strict",
     };
 
-    // 7. Send response
+    // Delete OTP record after successful verification
+    await OTP.findOneAndDelete({ otp });
+
+    // Send response
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
@@ -196,10 +196,8 @@ const verifyUserOTPLogin = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(
-      error.statusCode || 500,
-      error.message || "OTP verification error"
-    );
+    console.error("Error in verifyUserOTPLogin:", error);
+    throw error; // Re-throw to let asyncHandler pass to next()
   }
 });
 
@@ -207,37 +205,30 @@ const logoutUserController = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    throw new ApiError(400, "No refresh Token found");
+    throw new ApiError(400, "No refresh token found");
   }
 
   const user = await User.findOne({ refreshToken });
-
-  if (!user) {
-    // Still clear cookies for safety
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-    return res.status(200).json(new ApiResponse(200, {}, "User logged out"));
+  if (user) {
+    user.refreshToken = null;
+    await user.save({ validateBeforeSave: false });
   }
 
-  user.refreshToken = null;
-  await user.save({ validateBeforeSave: false });
-
-  // Clear cookies
   res
     .clearCookie("accessToken", {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
       sameSite: "Strict",
     })
     .clearCookie("refreshToken", {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
       sameSite: "Strict",
     });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, {}, "user logged out successfully"));
+    .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
 module.exports = {

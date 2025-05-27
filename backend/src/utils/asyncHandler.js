@@ -1,13 +1,13 @@
 const asyncHandler = (fn) => async (req, res, next) => {
   try {
-    // Execute the passed function (fn) with req, res, and next
-    await fn(req, res, next);
+    // Execute the passed function and return its result
+    const result = await fn(req, res, next);
+    return result;
   } catch (error) {
-    // If an error occurs, send a response with the error code (if available) or default to 500
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    // Pass error to Express error handler
+    console.error("AsyncHandler caught error:", error);
+    next(error);
   }
 };
+
 module.exports = asyncHandler;
