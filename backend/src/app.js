@@ -7,9 +7,23 @@ dotenv.config();
 const app = express();
 
 // to communicate with frontend and to allow the only certain server to communicate with our backend
+// Define allowed origins
+  const allowedOrigins = [
+    process.env.CORS_ORIGIN, // http://localhost:3000
+    process.env.USER_CORS_ORIGIN, // http://localhost:5173
+  ];
+// Configure CORS to allow multiple origins
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g., mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );

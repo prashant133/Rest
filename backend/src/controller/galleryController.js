@@ -1,4 +1,3 @@
-// controllers/galleryController.js
 const asyncHandler = require("../utils/asyncHandler");
 const Gallery = require("../model/galleryModel");
 const { uploadFileWithFolderLogic, deleteFileFromCloudinary } = require("../helper/cloudinaryHepler");
@@ -8,7 +7,12 @@ const mongoose = require("mongoose");
 
 // Upload images (Admin only)
 const uploadImagesController = asyncHandler(async (req, res) => {
-  const { title } = req.body;
+  const { title, category, date } = req.body;
+
+  // Validate inputs
+  if (!title || !category || !date) {
+    throw new ApiError(400, "Title, category, and date are required");
+  }
 
   // Validate file uploads
   if (!req.files || req.files.length < 1 || req.files.length > 10) {
@@ -50,6 +54,8 @@ const uploadImagesController = asyncHandler(async (req, res) => {
   // Save images as a single post to MongoDB
   const post = await Gallery.create({
     title,
+    category,
+    date,
     images,
   });
   console.log("✅ Post saved to MongoDB:", post);
@@ -177,6 +183,6 @@ module.exports = {
   uploadImagesController,
   deleteImageController,
   deletePostController,
-  getAllImagesController,
+  getAllImagesController, 
   getImageByIdController,
 };

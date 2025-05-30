@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import NepaliCalendar from '@/components/NepaliCalendar';
 import { useAuth } from '@/context/AuthContext';
@@ -15,16 +16,18 @@ interface RawEvent {
   _id: string;
   title: string;
   date?: string;
+  time?: string;
   location?: string;
-  description: string; // Required in backend
-  files?: { url: string; type: string }[]; // Optional, as per event schema
+  description: string;
+  files?: { url: string; type: string }[];
 }
 
-// Interface for events passed to NepaliCalendar (matches CalendarEvent)
+// Interface for events passed to NepaliCalendar
 interface Event {
   _id: string;
   title: string;
   date?: string;
+  time?: string;
   location?: string;
   description: string;
   files?: { url: string; type: string }[];
@@ -41,6 +44,9 @@ const Dashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [noEventMessage, setNoEventMessage] = useState('');
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -50,24 +56,29 @@ const Dashboard = () => {
           withCredentials: true,
         });
 
-        // Normalize events (no need for fallback since description is required)
+        // Normalize events
         const normalizedEvents: Event[] = response.data.data.map((event: RawEvent) => ({
           _id: event._id,
           title: event.title,
           date: event.date,
+          time: event.time,
           location: event.location,
           description: event.description,
           files: event.files,
         }));
 
+        // Adjust for +0545 timezone
         const now = new Date();
+        const offsetMs = 5 * 60 * 60 * 1000 + 45 * 60 * 1000; // +0545
+        const adjustedNow = new Date(now.getTime() + offsetMs);
+
         const upcoming = normalizedEvents
-          .filter((event) => event.date && new Date(event.date) > now)
+          .filter((event) => event.date && new Date(`${event.date}T${event.time || '00:00'}:00+05:45`) > adjustedNow)
           .sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime())
           .slice(0, 3);
 
         const completed = normalizedEvents.filter(
-          (event) => event.date && new Date(event.date) <= now
+          (event) => event.date && new Date(`${event.date}T${event.time || '00:00'}:00+05:45`) <= adjustedNow
         );
 
         setEvents(normalizedEvents);
@@ -102,9 +113,49 @@ const Dashboard = () => {
     fetchEvents();
   }, [addNotification, toast]);
 
-  const handleEventAdded = (newEvent: Event) => {
-    setEvents((prev) => [...prev, newEvent]);
-    setUpcomingEventsCount((prev) => prev + 1);
+  const handleDateClick = async (date: string) => {
+    // Convert date to YYYY-MM-DD format for comparison
+    const formattedDate = format(new Date(date), 'yyyy-MM-dd');
+
+    // Find events on the selected date
+    const matchingEvents = events.filter(
+      (event) => event.date && format(new Date(event.date), 'yyyy-MM-dd') === formattedDate
+    );
+
+    if (matchingEvents.length > 0) {
+      // Fetch the first matching event by ID
+      const eventId = matchingEvents[0]._id;
+      try {
+        const response = await axios.get(`${API_BASE_URL}/event/get-event/${eventId}`, {
+          withCredentials: true,
+        });
+        const eventData: RawEvent = response.data.data;
+        setSelectedEvent({
+          _id: eventData._id,
+          title: eventData.title,
+          date: eventData.date,
+          time: eventData.time,
+          location: eventData.location,
+          description: eventData.description,
+          files: eventData.files,
+        });
+        setNoEventMessage('');
+        setIsDialogOpen(true);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof AxiosError
+          ? error.response?.data?.message || 'Failed to fetch event details'
+          : 'An unexpected error occurred';
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+    } else {
+      setSelectedEvent(null);
+      setNoEventMessage(`No event on ${format(new Date(date), 'MMMM d, yyyy')}`);
+      setIsDialogOpen(true);
+    }
   };
 
   if (loading) {
@@ -170,7 +221,14 @@ const Dashboard = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {events
-                  .filter((event) => event.date && new Date(event.date) > new Date())
+                  .filter((event) => {
+                    if (!event.date || !event.time) return false;
+                    const eventDateTime = new Date(`${event.date}T${event.time}:00+05:45`);
+                    const now = new Date();
+                    const offsetMs = 5 * 60 * 60 * 1000 + 45 * 60 * 1000; // +0545
+                    const adjustedNow = new Date(now.getTime() + offsetMs);
+                    return eventDateTime > adjustedNow;
+                  })
                   .sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime())
                   .slice(0, 3)
                   .map((event) => (
@@ -195,10 +253,10 @@ const Dashboard = () => {
                                 <span>{event.location}</span>
                               </div>
                             )}
-                            {event.date && (
+                            {event.date && event.time && (
                               <div className="flex items-center text-gray-500 text-sm">
                                 <CalendarDays className="w-4 h-4 mr-1" />
-                                <span>{format(parseISO(event.date), 'h:mm a')}</span>
+                                <span>{format(parseISO(`${event.date}T${event.time}`), 'h:mm a')}</span>
                               </div>
                             )}
                           </div>
@@ -212,8 +270,61 @@ const Dashboard = () => {
         </Card>
 
         <div className="mt-6">
-          <NepaliCalendar events={events} onEventAdded={handleEventAdded} />
+          <NepaliCalendar events={events} onDateClick={handleDateClick} />
         </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {selectedEvent ? selectedEvent.title : 'No Event'}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedEvent ? (
+                  <div className="space-y-2">
+                    <p>{selectedEvent.description}</p>
+                    {selectedEvent.date && (
+                      <p>
+                        <strong>Date:</strong> {format(parseISO(selectedEvent.date), 'MMMM d, yyyy')}
+                      </p>
+                    )}
+                    {selectedEvent.time && (
+                      <p>
+                        <strong>Time:</strong> {format(parseISO(`${selectedEvent.date}T${selectedEvent.time}`), 'h:mm a')}
+                      </p>
+                    )}
+                    {selectedEvent.location && (
+                      <p>
+                        <strong>Location:</strong> {selectedEvent.location}
+                      </p>
+                    )}
+                    {selectedEvent.files && selectedEvent.files.length > 0 && (
+                      <div>
+                        <strong>Files:</strong>
+                        <ul className="list-disc pl-5">
+                          {selectedEvent.files.map((file, index) => (
+                            <li key={index}>
+                              <a
+                                href={file.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {file.url.split('/').pop()}
+                              </a> ({file.type})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p>{noEventMessage}</p>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

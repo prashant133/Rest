@@ -4,6 +4,7 @@ const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const { sendOTPController, verifyOTPController } = require("./otpController");
 const OTP = require("../model/otpModel");
+const { v4: uuidv4 } = require('uuid');
 
 // Generate refresh and access tokens
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -45,8 +46,6 @@ const registerUserController = asyncHandler(async (req, res) => {
     office,
     serviceStartDate,
     serviceRetirementDate,
-    membershipNumber,
-    registrationNumber,
     dateOfFillUp,
     place,
     email,
@@ -71,28 +70,28 @@ const registerUserController = asyncHandler(async (req, res) => {
     office,
     serviceStartDate,
     serviceRetirementDate,
-    membershipNumber,
-    registrationNumber,
     dateOfFillUp,
     place,
     email,
     password,
+    membershipNumber: `MEM-${uuidv4().slice(0, 8).toUpperCase()}`,
+    registrationNumber: `REG-${uuidv4().slice(0, 8).toUpperCase()}`,
   };
 
   // Validate input
   for (const [key, value] of Object.entries(requiredFields)) {
-    if (!value) {
+    if (!value && key !== 'membershipNumber' && key !== 'registrationNumber') {
       throw new ApiError(400, `Field '${key}' is required`);
     }
   }
 
   // Check if user already exists
   const existingUser = await User.findOne({
-    $or: [{ employeeId }, { email }],
+    $or: [{ employeeId }, { email }, { mobileNumber }, { telephoneNumber }],
   });
 
   if (existingUser) {
-    throw new ApiError(400, "User already exists");
+    throw new ApiError(400, "User already exists with this employee ID, email, or phone number");
   }
 
   // Create new user
@@ -107,7 +106,7 @@ const registerUserController = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(new ApiResponse(200, createdUser, "user created successfully"));
+    .json(new ApiResponse(200, createdUser, "User created successfully"));
 });
 
 const sendOTPVerificationLogin = asyncHandler(async (req, res) => {
@@ -197,7 +196,7 @@ const verifyUserOTPLogin = asyncHandler(async (req, res) => {
       );
   } catch (error) {
     console.error("Error in verifyUserOTPLogin:", error);
-    throw error; // Re-throw to let asyncHandler pass to next()
+    throw error;
   }
 });
 
