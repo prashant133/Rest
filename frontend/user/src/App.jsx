@@ -8,6 +8,7 @@ import Events from "./pages/Events";
 import Gallery from "./pages/Gallery";
 import Membership from "./pages/Membership";
 import Branches from "./pages/Branches";
+import Login from "./pages/LoginPage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/membership" element={<Membership />} />
           <Route path="/branch" element={<Branches />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </Layout>
     </Router>

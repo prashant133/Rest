@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Events() {
@@ -7,6 +8,8 @@ function Events() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
+  const navigate = useNavigate();
 
   // Fetch all events
   useEffect(() => {
@@ -53,6 +56,30 @@ function Events() {
     }
   };
 
+  // Handle Register Now button click
+  const handleRegister = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/v1/user/check-auth", {
+        withCredentials: true,
+      });
+      if (response.data.success && response.data.data.role === "user") {
+        // User is logged in and has role "user"
+        setNotification({
+          message: "Registered successfully!",
+          type: "success",
+        });
+        // Clear notification after 3 seconds
+        setTimeout(() => setNotification(null), 3000);
+      } else {
+        // User is authenticated but not a "user" role
+        navigate("/login");
+      }
+    } catch {
+      // User is not authenticated, redirect to login
+      navigate("/login");
+    }
+  };
+
   // Filter upcoming events (events with a date in the future)
   const upcomingEvents = events.filter((event) => {
     const eventDate = new Date(event.date);
@@ -69,6 +96,23 @@ function Events() {
 
   return (
     <div className="bg-gray-50 text-gray-800">
+      {/* Notification */}
+      {notification && (
+        <div
+          className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+            notification.type === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          <p>{notification.message}</p>
+          <button
+            onClick={() => setNotification(null)}
+            className="absolute top-1 right-2 text-white hover:text-gray-200"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-[#0c1c35] to-[#13284c] text-white py-20 text-center">
         <h1 className="text-4xl font-bold mb-2">Events & Activities</h1>
@@ -160,7 +204,13 @@ function Events() {
                       </li>
                     </ul>
                   </div>
-                  <button className="mt-6 bg-black text-white text-sm font-semibold py-2 rounded hover:bg-gray-800 transition">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the card's onClick
+                      handleRegister(event._id);
+                    }}
+                    className="mt-6 bg-black text-white text-sm font-semibold py-2 rounded hover:bg-gray-800 transition"
+                  >
                     Register Now
                   </button>
                 </div>
