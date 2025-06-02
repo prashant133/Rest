@@ -32,6 +32,8 @@ function Membership() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [membershipNumber, setMembershipNumber] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,6 +58,8 @@ function Membership() {
     try {
       const response = await axios.post('http://localhost:5000/api/v1/user/register', formData);
       setSuccess(response.data.message);
+      setMembershipNumber(response.data.data.membershipNumber || 'N/A');
+      setRegistrationNumber(response.data.data.registrationNumber || 'N/A');
       setShowSuccessPopup(true);
       setFormData({
         employeeId: '',
@@ -87,9 +91,11 @@ function Membership() {
 
   const closePopup = () => {
     setShowSuccessPopup(false);
+    setMembershipNumber('');
+    setRegistrationNumber('');
   };
 
-  const currentDate = new Date();
+
   const minDob = new Date(1900, 0, 1);
   const maxDob = new Date();
   const minServiceDate = new Date(1900, 0, 1);
@@ -127,7 +133,9 @@ function Membership() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">Registration Successful!</h2>
-              <p className="text-center text-gray-600 mb-6">Your membership application has been successfully submitted.</p>
+              <p className="text-center text-gray-600 mb-2">Your membership application has been successfully submitted.</p>
+              <p className="text-center text-gray-600 mb-2"><strong>Membership Number:</strong> {membershipNumber}</p>
+              <p className="text-center text-gray-600 mb-6"><strong>Registration Number:</strong> {registrationNumber}</p>
               <div className="flex justify-center">
                 <button
                   onClick={closePopup}
