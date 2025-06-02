@@ -21,6 +21,7 @@ interface Event {
   _id: string;
   title: string;
   date?: string;
+  time?: string;
   location?: string;
   description: string;
   files?: {
@@ -43,11 +44,29 @@ const Events = () => {
   const [formData, setFormData] = useState({
     title: '',
     date: '',
+    time: '',
     location: '',
     description: '',
     files: [] as File[],
   });
   const { toast } = useToast();
+
+  // Get current date and time in +0545 timezone
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    // Adjust for +0545 timezone (5 hours 45 minutes ahead of UTC)
+    const offsetMs = 5 * 60 * 60 * 1000 + 45 * 60 * 1000;
+    const adjustedDate = new Date(now.getTime() + offsetMs);
+    
+    const date = adjustedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hours = String(adjustedDate.getHours()).padStart(2, '0');
+    const minutes = String(adjustedDate.getMinutes()).padStart(2, '0');
+    const time = `${hours}:${minutes}`;
+    
+    return { date, time };
+  };
+
+  const { date: minDate, time: minTime } = getCurrentDateTime();
 
   useEffect(() => {
     fetchEvents();
@@ -199,7 +218,7 @@ const Events = () => {
       }
     }
 
-    if (isEditMode && !formData.title && !formData.description && !formData.date && !formData.location && formData.files.length === 0) {
+    if (isEditMode && !formData.title && !formData.description && !formData.date && !formData.time && !formData.location && formData.files.length === 0) {
       toast({
         title: 'Update Error',
         description: 'At least one field must be provided for update.',
@@ -208,10 +227,28 @@ const Events = () => {
       return;
     }
 
+    // Validate date and time are not in the past
+    if (formData.date && formData.time) {
+      const selectedDateTime = new Date(`${formData.date}T${formData.time}:00+05:45`);
+      const now = new Date();
+      const offsetMs = 5 * 60 * 60 * 1000 + 45 * 60 * 1000; // +0545
+      const currentDateTime = new Date(now.getTime() + offsetMs);
+      
+      if (selectedDateTime < currentDateTime) {
+        toast({
+          title: 'Invalid Date/Time',
+          description: 'Please select a date and time in the future.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     const form = new FormData();
     form.append('title', formData.title);
     form.append('description', formData.description);
     if (formData.date) form.append('date', formData.date);
+    if (formData.time) form.append('time', formData.time);
     if (formData.location) form.append('location', formData.location);
     formData.files.forEach((file) => form.append('files', file));
 
@@ -269,6 +306,7 @@ const Events = () => {
     setFormData({
       title: event.title,
       date: event.date || '',
+      time: event.time || '',
       location: event.location || '',
       description: event.description,
       files: [],
@@ -312,6 +350,7 @@ const Events = () => {
     setFormData({
       title: '',
       date: '',
+      time: '',
       location: '',
       description: '',
       files: [],
@@ -353,6 +392,7 @@ const Events = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Files</TableHead>
@@ -364,6 +404,7 @@ const Events = () => {
                 <TableRow key={event._id}>
                   <TableCell className="font-medium">{event.title}</TableCell>
                   <TableCell>{event.date || 'N/A'}</TableCell>
+                  <TableCell>{event.time || 'N/A'}</TableCell>
                   <TableCell>{event.location || 'N/A'}</TableCell>
                   <TableCell className="max-w-xs truncate">{event.description}</TableCell>
                   <TableCell>
@@ -461,6 +502,22 @@ const Events = () => {
                   value={formData.date}
                   onChange={handleInputChange}
                   className="h-10"
+                  min={minDate}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="time" className="text-sm font-medium">
+                  Time:
+                </label>
+                <Input
+                  id="time"
+                  name="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  className="h-10"
+                  min={formData.date === minDate ? minTime : undefined}
                 />
               </div>
 

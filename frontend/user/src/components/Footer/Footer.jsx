@@ -32,6 +32,7 @@ function Footer() {
               "Submit Photos",
               "Contact",
               "Membership",
+              "Login",
             ].map((link) => (
               <li key={link}>
                 <a

@@ -18,6 +18,10 @@ const eventSchema = new mongoose.Schema(
     date: { 
       type: String 
     }, 
+    time: {
+      type: String,
+      trim: true
+    },
     location: { 
       type: String 
     },
@@ -30,7 +34,7 @@ const eventSchema = new mongoose.Schema(
       ],
       validate: {
         validator: function (value) {
-          return value.length <= 10; // Max 5 files
+          return value.length <= 10; // Max 10 files
         },
         message: "You can only upload up to 10 files",
       },

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -11,83 +10,170 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import axios, { AxiosError } from 'axios';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+const API_BASE_URL = 'http://localhost:5000/api/v1';
 
 interface Member {
-  id: number;
-  name: string;
+  _id: string;
+  employeeId: string;
+  username: string;
+  surname: string;
   address: string;
-  phone: string;
+  province: string;
+  district: string;
+  municipality: string;
+  wardNumber: string;
+  tole: string;
+  telephoneNumber: string;
+  mobileNumber: string;
+  dob: string;
+  postAtRetirement: string;
+  pensionLeaseNumber: string;
+  office: string;
+  serviceStartDate: string;
+  serviceRetirementDate: string;
+  dateOfFillUp: string;
+  place: string;
   email: string;
-  retirementDate: string;
-  photo?: string;
+  membershipNumber: string;
+  registrationNumber: string;
+  role: string;
 }
 
-const initialMembers: Member[] = [
-  {
-    id: 1,
-    name: 'Rakesh Thapa',
-    address: 'Kalanki, Ktm',
-    phone: '9842222222',
-    email: 'rakeshtahapa@gmail.com',
-    retirementDate: '2058-1-25',
-  },
-  {
-    id: 2,
-    name: 'Yogesh Roka',
-    address: 'Bafak, Ktm',
-    phone: '9844444444',
-    email: 'yoeshroka@gmail.com',
-    retirementDate: '2074-2-30',
-  },
-  {
-    id: 3,
-    name: 'Hari Karki',
-    address: 'Butwal',
-    phone: '9843333333',
-    email: 'harikarki@gmail.com',
-    retirementDate: '2081-12-14',
-  },
-  {
-    id: 4,
-    name: 'Nisha Gc',
-    address: 'Hetauda',
-    phone: '9843000000',
-    email: 'nishagc@gmail.com',
-    retirementDate: '2080-9-5',
-  },
-  {
-    id: 5,
-    name: 'Sita Magar',
-    address: 'Chitwan',
-    phone: '9800000000',
-    email: 'sitamagar@gmail.com',
-    retirementDate: '2073-11-25',
-  },
-];
-
 const Members = () => {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [members, setMembers] = useState<Member[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    email: '',
-    retirementDate: '',
-    photo: null as File | null,
-  });
-  const [formErrors, setFormErrors] = useState({
-    name: '',
-    email: '',
-    phone: '',
-  });
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Form state
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    username: '',
+    surname: '',
+    address: '',
+    province: '',
+    district: '',
+    municipality: '',
+    wardNumber: '',
+    tole: '',
+    telephoneNumber: '',
+    mobileNumber: '',
+    dob: '',
+    postAtRetirement: '',
+    pensionLeaseNumber: '',
+    office: '',
+    serviceStartDate: '',
+    serviceRetirementDate: '',
+    dateOfFillUp: '',
+    place: '',
+    email: '',
+  });
+
+  // Validation function for form data
+  const validateForm = () => {
+    const requiredFields = [
+      'employeeId', 'username', 'surname', 'address', 'province', 'district',
+      'municipality', 'wardNumber', 'tole', 'telephoneNumber', 'mobileNumber',
+      'dob', 'postAtRetirement', 'pensionLeaseNumber', 'office',
+      'serviceStartDate', 'serviceRetirementDate', 'dateOfFillUp', 'place', 'email'
+    ];
+    
+    for (const field of requiredFields) {
+      if (!formData[field as keyof typeof formData].trim()) {
+        return `Field '${field}' is required`;
+      }
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      return 'Invalid email format';
+    }
+    
+    // Phone number validation
+    const phoneRegex = /^\d{7,15}$/;
+    if (!phoneRegex.test(formData.mobileNumber) || !phoneRegex.test(formData.telephoneNumber)) {
+      return 'Phone numbers must be 7-15 digits';
+    }
+    
+    return '';
+  };
+
+  // Fetch all members
+  const fetchMembers = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await axios.get(`${API_BASE_URL}/user/get-all-users`, {
+        withCredentials: true,
+        headers: { 'x-admin-frontend': 'true' }
+      });
+
+      // Normalize members
+      const normalizedMembers: Member[] = response.data.data
+        .filter((user: Member) => user.role === 'user')
+        .map((user: Member) => ({
+          _id: user._id,
+          employeeId: user.employeeId,
+          username: user.username,
+          surname: user.surname,
+          address: user.address,
+          province: user.province,
+          district: user.district,
+          municipality: user.municipality,
+          wardNumber: user.wardNumber,
+          tole: user.tole,
+          telephoneNumber: user.telephoneNumber,
+          mobileNumber: user.mobileNumber,
+          dob: user.dob.split('T')[0], // Normalize date format
+          postAtRetirement: user.postAtRetirement,
+          pensionLeaseNumber: user.pensionLeaseNumber,
+          office: user.office,
+          serviceStartDate: user.serviceStartDate.split('T')[0],
+          serviceRetirementDate: user.serviceRetirementDate.split('T')[0],
+          dateOfFillUp: user.dateOfFillUp.split('T')[0],
+          place: user.place,
+          email: user.email,
+          membershipNumber: user.membershipNumber,
+          registrationNumber: user.registrationNumber,
+          role: user.role
+        }));
+
+      setMembers(normalizedMembers);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof AxiosError
+        ? error.response?.data?.message || 'Failed to fetch members'
+        : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    fetchMembers();
+  }, [isAuthenticated, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -95,154 +181,189 @@ const Members = () => {
       ...formData,
       [name]: value,
     });
-
-    // Clear error when user types
-    setFormErrors({
-      ...formErrors,
-      [name]: '',
-    });
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData({
-        ...formData,
-        photo: file,
+  const handleEdit = async (member: Member) => {
+    try {
+      setError('');
+      const response = await axios.get(`${API_BASE_URL}/user/get-user/${member._id}`, {
+        withCredentials: true,
+        headers: { 'x-admin-frontend': 'true' }
       });
       
-      // Preview the photo
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const userData = response.data.data;
+      setCurrentMember(userData);
+      setFormData({
+        employeeId: userData.employeeId,
+        username: userData.username,
+        surname: userData.surname,
+        address: userData.address,
+        province: userData.province,
+        district: userData.district,
+        municipality: userData.municipality,
+        wardNumber: userData.wardNumber,
+        tole: userData.tole,
+        telephoneNumber: userData.telephoneNumber,
+        mobileNumber: userData.mobileNumber,
+        dob: userData.dob.split('T')[0],
+        postAtRetirement: userData.postAtRetirement,
+        pensionLeaseNumber: userData.pensionLeaseNumber,
+        office: userData.office,
+        serviceStartDate: userData.serviceStartDate.split('T')[0],
+        serviceRetirementDate: userData.serviceRetirementDate.split('T')[0],
+        dateOfFillUp: userData.dateOfFillUp.split('T')[0],
+        place: userData.place,
+        email: userData.email,
+      });
+      setIsEditMode(true);
+      setIsModalOpen(true);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof AxiosError
+        ? error.response?.data?.message || 'Failed to fetch member details'
+        : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
-  const validateForm = () => {
-    const errors = {
-      name: '',
-      email: '',
-      phone: '',
-    };
-    
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required';
-    }
-    
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
-    }
-    
-    if (!formData.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phone)) {
-      errors.phone = 'Phone number should be 10 digits';
-    }
-    
-    setFormErrors(errors);
-    
-    return !Object.values(errors).some(error => error);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      toast({
+        title: 'Validation Error',
+        description: validationError,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setError('');
       if (isEditMode && currentMember) {
         // Update existing member
-        const updatedMembers = members.map(member => {
-          if (member.id === currentMember.id) {
-            return {
-              ...member,
-              name: formData.name,
-              address: formData.address,
-              phone: formData.phone,
-              email: formData.email,
-              retirementDate: formData.retirementDate,
-              photo: photoPreview || member.photo,
-            };
+        await axios.patch(
+          `${API_BASE_URL}/user/update-user/${currentMember._id}`,
+          formData,
+          {
+            withCredentials: true,
+            headers: { 'x-admin-frontend': 'true' }
           }
-          return member;
-        });
-        
-        setMembers(updatedMembers);
+        );
         toast({
-          title: "Member Updated",
-          description: `${formData.name} has been updated successfully.`,
+          title: 'Success',
+          description: 'Member updated successfully',
         });
       } else {
-        // Add new member
-        const newMember: Member = {
-          id: members.length + 1,
-          name: formData.name,
-          address: formData.address,
-          phone: formData.phone,
-          email: formData.email,
-          retirementDate: formData.retirementDate,
-          photo: photoPreview || undefined,
-        };
-        
-        setMembers([...members, newMember]);
+        // Create new member (requires password for registration)
+        await axios.post(
+          `${API_BASE_URL}/user/register`,
+          { ...formData, password: 'defaultPassword123' }, // Note: In production, handle password securely
+          {
+            withCredentials: true,
+            headers: { 'x-admin-frontend': 'true' }
+          }
+        );
         toast({
-          title: "Success",
-          description: `${newMember.name} has been added to the members list.`,
+          title: 'Success',
+          description: 'Member created successfully',
         });
       }
-      
-      // Reset form and close modal
+      fetchMembers();
       resetFormAndCloseModal();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof AxiosError
+        ? error.response?.data?.message || 'Failed to save member'
+        : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleEdit = (member: Member) => {
-    setCurrentMember(member);
-    setFormData({
-      name: member.name,
-      address: member.address,
-      phone: member.phone,
-      email: member.email,
-      retirementDate: member.retirementDate,
-      photo: null,
-    });
-    setPhotoPreview(member.photo || null);
-    setIsEditMode(true);
-    setIsModalOpen(true);
-  };
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this member?')) {
+      return;
+    }
 
-  const handleDelete = (id: number) => {
-    const updatedMembers = members.filter(member => member.id !== id);
-    setMembers(updatedMembers);
-    
-    toast({
-      title: "Member Deleted",
-      description: "The member has been deleted successfully.",
-      variant: "destructive",
-    });
+    try {
+      setError('');
+      await axios.delete(
+        `${API_BASE_URL}/user/delete-user/${id}`,
+        {
+          withCredentials: true,
+          headers: { 'x-admin-frontend': 'true' }
+        }
+      );
+      toast({
+        title: 'Success',
+        description: 'Member deleted successfully',
+      });
+      fetchMembers();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof AxiosError
+        ? error.response?.data?.message || 'Failed to delete member'
+        : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
   };
 
   const resetFormAndCloseModal = () => {
     setFormData({
-      name: '',
+      employeeId: '',
+      username: '',
+      surname: '',
       address: '',
-      phone: '',
+      province: '',
+      district: '',
+      municipality: '',
+      wardNumber: '',
+      tole: '',
+      telephoneNumber: '',
+      mobileNumber: '',
+      dob: '',
+      postAtRetirement: '',
+      pensionLeaseNumber: '',
+      office: '',
+      serviceStartDate: '',
+      serviceRetirementDate: '',
+      dateOfFillUp: '',
+      place: '',
       email: '',
-      retirementDate: '',
-      photo: null,
     });
-    setFormErrors({
-      name: '',
-      email: '',
-      phone: '',
-    });
-    setPhotoPreview(null);
     setCurrentMember(null);
     setIsEditMode(false);
     setIsModalOpen(false);
+    setError('');
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-800"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -255,7 +376,7 @@ const Members = () => {
           }}
           className="bg-gray-800 hover:bg-gray-700"
         >
-          + Add Members
+          + Add Member
         </Button>
       </div>
       
@@ -264,33 +385,48 @@ const Members = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Employee ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Phone no</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Retirement Date</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Membership No.</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-medium">{member.name}</TableCell>
-                  <TableCell>{member.address}</TableCell>
-                  <TableCell>{member.phone}</TableCell>
-                  <TableCell>{member.email}</TableCell>
-                  <TableCell>{member.retirementDate}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleEdit(member)}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      Edit
-                    </Button>
+              {members.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-gray-500">
+                    No members found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                members.map((member) => (
+                  <TableRow key={member._id}>
+                    <TableCell>{member.employeeId}</TableCell>
+                    <TableCell className="font-medium">{member.username} {member.surname}</TableCell>
+                    <TableCell>{member.email}</TableCell>
+                    <TableCell>{member.mobileNumber}</TableCell>
+                    <TableCell>{member.membershipNumber}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleEdit(member)}
+                        className="text-gray-600 hover:text-gray-900 mr-2"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleDelete(member._id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
@@ -298,99 +434,265 @@ const Members = () => {
       
       {/* Add/Edit Member Dialog */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {isEditMode ? 'Edit Member' : 'Add Members'}
+              {isEditMode ? 'Edit Member' : 'Add Member'}
             </DialogTitle>
+            <DialogDescription>
+              {isEditMode ? 'Update member details' : 'Fill in the member details'}
+            </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-6 py-4">
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <label htmlFor="name" className="text-sm font-medium">Name:</label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="h-10"
-                  required
-                />
-                {formErrors.name && <p className="text-red-500 text-xs">{formErrors.name}</p>}
-              </div>
-              
-              <div className="grid gap-2">
-                <label htmlFor="address" className="text-sm font-medium">Address:</label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="h-10"
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <label htmlFor="phone" className="text-sm font-medium">Phone no:</label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="h-10"
-                  required
-                />
-                {formErrors.phone && <p className="text-red-500 text-xs">{formErrors.phone}</p>}
-              </div>
-              
-              <div className="grid gap-2">
-                <label htmlFor="email" className="text-sm font-medium">Email:</label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="h-10"
-                  required
-                />
-                {formErrors.email && <p className="text-red-500 text-xs">{formErrors.email}</p>}
-              </div>
-              
-              <div className="grid gap-2">
-                <label htmlFor="retirementDate" className="text-sm font-medium">Retirement Date:</label>
-                <Input
-                  id="retirementDate"
-                  name="retirementDate"
-                  type="date"
-                  value={formData.retirementDate}
-                  onChange={handleInputChange}
-                  className="h-10"
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <label htmlFor="photo" className="text-sm font-medium">Photo Upload:</label>
-                <Input
-                  id="photo"
-                  name="photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="h-auto p-2"
-                />
-                {photoPreview && (
-                  <div className="mt-2">
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="h-20 w-20 object-cover rounded-md"
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Personal Information */}
+              <div className="col-span-2">
+                <h3 className="font-medium mb-2">Personal Information</h3>
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <label htmlFor="employeeId" className="text-sm font-medium">Employee ID:</label>
+                    <Input
+                      id="employeeId"
+                      name="employeeId"
+                      value={formData.employeeId}
+                      onChange={handleInputChange}
+                      required
                     />
                   </div>
-                )}
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="username" className="text-sm font-medium">First Name:</label>
+                    <Input
+                      id="username"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="surname" className="text-sm font-medium">Surname:</label>
+                    <Input
+                      id="surname"
+                      name="surname"
+                      value={formData.surname}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="dob" className="text-sm font-medium">Date of Birth:</label>
+                    <Input
+                      id="dob"
+                      name="dob"
+                      type="date"
+                      value={formData.dob}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="email" className="text-sm font-medium">Email:</label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Contact Information */}
+              <div className="col-span-2">
+                <h3 className="font-medium mb-2">Contact Information</h3>
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <label htmlFor="address" className="text-sm font-medium">Address:</label>
+                    <Input
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="province" className="text-sm font-medium">Province:</label>
+                    <Input
+                      id="province"
+                      name="province"
+                      value={formData.province}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="district" className="text-sm font-medium">District:</label>
+                    <Input
+                      id="district"
+                      name="district"
+                      value={formData.district}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="municipality" className="text-sm font-medium">Municipality:</label>
+                    <Input
+                      id="municipality"
+                      name="municipality"
+                      value={formData.municipality}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="wardNumber" className="text-sm font-medium">Ward Number:</label>
+                    <Input
+                      id="wardNumber"
+                      name="wardNumber"
+                      value={formData.wardNumber}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="tole" className="text-sm font-medium">Tole:</label>
+                    <Input
+                      id="tole"
+                      name="tole"
+                      value={formData.tole}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="telephoneNumber" className="text-sm font-medium">Telephone:</label>
+                    <Input
+                      id="telephoneNumber"
+                      name="telephoneNumber"
+                      value={formData.telephoneNumber}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="mobileNumber" className="text-sm font-medium">Mobile:</label>
+                    <Input
+                      id="mobileNumber"
+                      name="mobileNumber"
+                      value={formData.mobileNumber}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Employment Information */}
+              <div className="col-span-2">
+                <h3 className="font-medium mb-2">Employment Information</h3>
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <label htmlFor="postAtRetirement" className="text-sm font-medium">Post at Retirement:</label>
+                    <Input
+                      id="postAtRetirement"
+                      name="postAtRetirement"
+                      value={formData.postAtRetirement}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="pensionLeaseNumber" className="text-sm font-medium">Pension Lease Number:</label>
+                    <Input
+                      id="pensionLeaseNumber"
+                      name="pensionLeaseNumber"
+                      value={formData.pensionLeaseNumber}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="office" className="text-sm font-medium">Office:</label>
+                    <Input
+                      id="office"
+                      name="office"
+                      value={formData.office}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="serviceStartDate" className="text-sm font-medium">Service Start Date:</label>
+                    <Input
+                      id="serviceStartDate"
+                      name="serviceStartDate"
+                      type="date"
+                      value={formData.serviceStartDate}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="serviceRetirementDate" className="text-sm font-medium">Service Retirement Date:</label>
+                    <Input
+                      id="serviceRetirementDate"
+                      name="serviceRetirementDate"
+                      type="date"
+                      value={formData.serviceRetirementDate}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="dateOfFillUp" className="text-sm font-medium">Date of Fill Up:</label>
+                    <Input
+                      id="dateOfFillUp"
+                      name="dateOfFillUp"
+                      type="date"
+                      value={formData.dateOfFillUp}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="place" className="text-sm font-medium">Place:</label>
+                    <Input
+                      id="place"
+                      name="place"
+                      value={formData.place}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
+            
+            {error && (
+              <div className="text-red-500 text-sm">{error}</div>
+            )}
             
             <div className="flex justify-between pt-4">
               <Button
@@ -408,7 +710,7 @@ const Members = () => {
                     variant="destructive"
                     onClick={() => {
                       if (currentMember) {
-                        handleDelete(currentMember.id);
+                        handleDelete(currentMember._id);
                         resetFormAndCloseModal();
                       }
                     }}
@@ -418,7 +720,7 @@ const Members = () => {
                 )}
                 
                 <Button type="submit" className="bg-gray-700 text-white px-6">
-                  {isEditMode ? 'Update' : 'Upload File'}
+                  {isEditMode ? 'Update' : 'Create'}
                 </Button>
               </div>
             </div>
