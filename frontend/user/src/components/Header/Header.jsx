@@ -10,6 +10,7 @@ function Header() {
     "Gallery",
     "Contact",
     "Membership",
+    "Login",
   ];
 
   return (

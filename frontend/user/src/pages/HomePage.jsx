@@ -1,7 +1,42 @@
-// src/pages/Home.jsx
+import { useState, useEffect } from "react";
 import { FaLightbulb, FaBullseye, FaAward } from "react-icons/fa";
+import axios from "axios";
 
 function Home() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch all events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          "http://localhost:5000/api/v1/event/get-all-event",
+          { withCredentials: true }
+        );
+        if (response.data.success) {
+          // Filter for upcoming events (date >= today)
+          const upcomingEvents = response.data.data.filter((event) => {
+            const eventDate = new Date(event.date);
+            const today = new Date();
+            return eventDate >= today;
+          });
+          setEvents(upcomingEvents);
+        } else {
+          setError("Failed to fetch events");
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || "Error fetching events");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
   return (
     <>
       {/* Hero Section */}
@@ -14,7 +49,7 @@ function Home() {
       </section>
 
       {/* About Section */}
-      <section className=" text-center py-16 px-6">
+      <section className="text-center py-16 px-6">
         <h2 className="text-3xl font-semibold mb-6">About Our Community</h2>
         <p className="max-w-3xl mx-auto leading-relaxed">
           R.E.S.T is a vibrant community dedicated to supporting retired
@@ -69,29 +104,44 @@ function Home() {
 
       {/* Events Section */}
       <section className="py-16 px-6">
-        <h2 className="text-3xl font-bold text-center mb-10">
-          Upcoming Events
-        </h2>
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
-          {[
-            {
-              title: "Annual Meet 2025",
-              date: "June 15, 2025",
-              desc: "Join us for a grand reunion filled with memories, music, and meaningful moments.",
-            },
-            {
-              title: "Health & Wellness Workshop",
-              date: "July 8, 2025",
-              desc: "A session focused on staying active and healthy in retirement.",
-            },
-          ].map(({ title, date, desc }) => (
-            <div key={title} className="border border-gray-700 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-2">{title}</h3>
-              <p className="text-sm italic mb-2">{date}</p>
-              <p className="text-sm">{desc}</p>
-            </div>
-          ))}
-        </div>
+        <h2 className="text-3xl font-bold text-center mb-10">Upcoming Events</h2>
+        {loading && (
+          <div className="text-center py-10">
+            <p>Loading events...</p>
+          </div>
+        )}
+        {error && (
+          <div className="text-center py-10 text-red-600">
+            <p>{error}</p>
+          </div>
+        )}
+        {!loading && !error && (
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+            {events.length > 0 ? (
+              events.map((event) => (
+                <div
+                  key={event._id}
+                  className="border border-gray-700 rounded-lg p-6"
+                >
+                  <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
+                  <p className="text-sm italic mb-2">{event.date}</p>
+                  <p className="text-sm">{event.description}</p>
+                  {event.files.length > 0 && event.files[0].type.startsWith("image/") && (
+                    <img
+                      src={event.files[0].url}
+                      alt={event.title}
+                      className="mt-4 w-full h-32 object-cover rounded"
+                    />
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-600 col-span-2">
+                No upcoming events found.
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </>
   );

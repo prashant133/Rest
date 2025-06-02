@@ -9,7 +9,7 @@
 
   // Create event (Admin only)
   const createEventContoller = asyncHandler(async (req, res) => {
-    const { title, description, date, location } = req.body;
+    const { title, description, date, time,location } = req.body;
 
     // Validate input
     if (!title || !description) {
@@ -56,6 +56,7 @@
       title,
       description,
       date,
+      time,
       location,
       files,
     });
@@ -102,7 +103,7 @@
   // Update event (Admin only)
   const updateEventController = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { title, description, location, date } = req.body;
+    const { title, description, location,time, date } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new ApiError(400, "Invalid event ID");
@@ -121,6 +122,7 @@
     if (description) event.description = description;
     if (date) event.date = date;
     if (location) event.location = location;
+    if (time) event.time=time;
 
     // Validate and upload files if provided
     if (req.files && req.files.length > 0) {
