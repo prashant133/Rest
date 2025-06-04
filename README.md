@@ -1,7 +1,7 @@
 REST API Project
 A full-stack REST API with admin and user interfaces, built with Node.js, Express, MongoDB, and React.
 
-Installation
+Installation 
 Clone the repository:
 
 bash
@@ -13,7 +13,6 @@ bash
 cd backend/src && npm install
 cd ../frontend/rest-admin && npm install
 cd ../user && npm install
-cd ../..
 Set up environment variables:
 
 Create a .env file in the backend directory
