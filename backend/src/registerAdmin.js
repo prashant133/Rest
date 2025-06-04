@@ -1,9 +1,8 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const path = require("path");
 const User = require("./model/userModel");
 
-// Load .env file from D:\rest\backend\src
+// Load .env file
 dotenv.config();
 
 // Debug: Log MONGO_URI to verify
@@ -19,29 +18,29 @@ async function registerAdmin() {
     console.log("Connected to MongoDB");
 
     const adminData = {
-      employeeId: "ADMIN002",
-      username: "admin2",
-      surname: "admin",
-      address: "admin address",
-      province: "province",
-      district: "district",
-      municipality: "municipality",
-      wardNumber: "1",
-      tole: "tole",
-      telephoneNumber: "12345678922",
-      mobileNumber: "9876543230",
-      dob: "1990-01-01",
-      postAtRetirement: "admin",
-      pensionLeaseNumber: "PLN002",
-      office: "head office",
-      serviceStartDate: "2010-01-01",
-      serviceRetirementDate: "2040-01-01",
-      membershipNumber: "MN002",
-      registrationNumber: "RN002",
-      dateOfFillUp: "2023-01-01",
-      place: "place",
-      email: "zevilsshrestha007@gmail.com",
-      password: "admin123",
+      employeeId: "ADMIN003",
+      username: "admin3",
+      surname: "admin3",
+      address: "address",
+      province: "provie",
+      district: "distct",
+      municipality: "munipality",
+      wardNumber: "2",
+      tole: "toe",
+      telephoneNumber: "1234",
+      mobileNumber: "987654",
+      dob: "1990-01-11",
+      postAtRetirement: "admn",
+      pensionLeaseNumber: "PLN003",
+      office: "head offce",
+      serviceStartDate: "2010-01-1",
+      serviceRetirementDate: "2040-01-1",
+      membershipNumber: "MN003",
+      registrationNumber: "RN003",
+      dateOfFillUp: "2023-01-11",
+      place: "plae",
+      email: "zevilsshrestha07@gmail.com",
+      password: "admin123", // Do NOT hash here; let the model handle it
       role: "admin",
     };
 
@@ -53,10 +52,6 @@ async function registerAdmin() {
       console.log("Admin already exists");
       return;
     }
-
-    // Optional: Hash password with bcrypt
-    const bcrypt = require("bcrypt");
-    adminData.password = await bcrypt.hash(adminData.password, 10);
 
     await User.create(adminData);
     console.log("Admin registered successfully");
