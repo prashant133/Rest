@@ -1,13 +1,21 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const User = require("../model/userModel");
+const path = require("path");
+const User = require("./model/userModel");
 
+// Load .env file from D:\rest\backend\src
 dotenv.config();
+
+// Debug: Log MONGO_URI to verify
+console.log("MONGO_URI:", process.env.MONGO_URI);
 
 async function registerAdmin() {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-    });
+    if (!process.env.MONGO_URI) {
+      throw new Error("MONGO_URI is not defined in the .env file");
+    }
+
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB");
 
     const adminData = {
@@ -46,12 +54,17 @@ async function registerAdmin() {
       return;
     }
 
+    // Optional: Hash password with bcrypt
+    const bcrypt = require("bcrypt");
+    adminData.password = await bcrypt.hash(adminData.password, 10);
+
     await User.create(adminData);
     console.log("Admin registered successfully");
   } catch (error) {
     console.error("Error registering admin:", error);
   } finally {
-    mongoose.connection.close();
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed");
   }
 }
 
