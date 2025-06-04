@@ -9,14 +9,13 @@ bash
 - cd rest-project
 ## Install dependencies for all parts:
 
-bash
-cd backend/src && npm install
-cd ../frontend/rest-admin && npm install
-cd ../user && npm install
-cd ../..
-Set up environment variables:
+- bash
+- cd backend/src && npm install
+- cd ../frontend/rest-admin && npm install
+- cd ../user && npm install
 
-Create a .env file in the backend directory
+
+# Create a .env file in the backend directory
 
 - MONGO_URI=mongodb://127.0.0.1:27017/REST
 - JWT_SECRET=your_jwt_secret
