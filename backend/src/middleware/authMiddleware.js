@@ -7,10 +7,10 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
     // 1. Retrieve token from cookies or Authorization header
     let token;
-    
     // Check cookies first
     if (req.cookies?.accessToken) {
       token = req.cookies.accessToken;
+      console.log('Using accessToken from cookie');
     } 
     // Then check Authorization header
     else {
@@ -19,6 +19,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
         throw new ApiError(401, "No authorization token provided");
       }
       token = authHeader.split(" ")[1];
+      console.log('Using token from Authorization header');
     }
 
     if (!token) {
