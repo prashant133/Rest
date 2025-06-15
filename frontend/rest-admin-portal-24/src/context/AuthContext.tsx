@@ -50,25 +50,30 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTheme(savedTheme);
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     }
-    checkAuthStatus();
+
   }, []);
 
-  const checkAuthStatus = useCallback(async () => {
+    const checkAuthStatus = useCallback(async () => {
     try {
+      console.log('Sending check-auth request to:', `${API_BASE_URL}/user/check-auth`);
       const response = await axios.get(`${API_BASE_URL}/user/check-auth`, {
         withCredentials: true,
         headers: { 'x-admin-frontend': 'true' },
       });
-      
+      console.log('Check-auth response:', response.data);
       if (response.status === 200 && response.data.data) {
         setIsAuthenticated(true);
       }
     } catch (error) {
       setIsAuthenticated(false);
       if (error instanceof AxiosError) {
-        if (error.response?.status !== 401) {
-          console.error('Auth check error:', error.response?.data?.message);
-        }
+        console.error('Check-auth error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+      } else {
+        console.error('Check-auth error:', error);
       }
     }
   }, []);
