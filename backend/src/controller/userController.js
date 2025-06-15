@@ -125,6 +125,11 @@ const sendOTPVerificationLogin = asyncHandler(async (req, res) => {
     throw new ApiError(400, "User does not exist");
   }
 
+  // Check admin role for admin frontend
+  if (req.headers['x-admin-frontend'] === 'true' && user.role !== 'admin') {
+    throw new ApiError(403, 'Not an admin user from this frontend');
+  }
+  
   // Verify password
   const isPasswordValid = await user.isPasswordCorrect(password);
   if (!isPasswordValid) {
@@ -167,8 +172,8 @@ const verifyUserOTPLogin = asyncHandler(async (req, res) => {
     }
 
     // For admin frontend: Check if user is admin
-    if (req.headers['x-admin-frontend'] === 'true' && user.role !== "admin") {
-      throw new ApiError(403, "This interface is for admin users only");
+    if (req.headers['x-admin-frontend'] === 'true' && user.role !== 'admin') {
+      throw new ApiError(403, 'This interface is for admin users only');
     }
 
     // Generate tokens
@@ -179,9 +184,10 @@ const verifyUserOTPLogin = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
-      sameSite: "Strict",
+      sameSite: "Lax",
     };
-
+    
+    console.log('Setting cookies:', { accessToken, refreshToken });
     // Delete OTP record after successful verification
     await OTP.findOneAndDelete({ otp });
 
