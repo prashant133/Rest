@@ -5,39 +5,59 @@ const User = require("../model/userModel");
 
 const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
-    // retrive the token either cookiesor the authorization header
-
-    const token =
-      req.cookies?.accessToken ||
-      req.header("Authorization")?.replace("Bearer", "").trim();
-
-    // if no token is provided
-    if (!token) {
-      throw new ApiError(401, "unauthorized access");
+    // 1. Retrieve token from cookies or Authorization header
+    let token;
+    
+    // Check cookies first
+    if (req.cookies?.accessToken) {
+      token = req.cookies.accessToken;
+    } 
+    // Then check Authorization header
+    else {
+      const authHeader = req.header("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) {
+        throw new ApiError(401, "No authorization token provided");
+      }
+      token = authHeader.split(" ")[1];
     }
 
-    // verif the token using the secret key and decode the otkne payload
-    const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    if (!token) {
+      throw new ApiError(401, "Unauthorized access: No token provided");
+    }
 
-    // Fetch the user from the database using the decoded user ID.
-    // Exclude sensitive fields like password and refreshToken from the query result.
+    // 2. Verify token
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    
+    if (!decodedToken?._id) {
+      throw new ApiError(401, "Invalid token: Missing user ID");
+    }
 
-    const user = await User.findById(decodeToken?._id).select(
+    // 3. Fetch user
+    const user = await User.findById(decodedToken._id).select(
       "-password -refreshToken"
     );
 
-    // If the user does not exist, throw an error indicating an invalid token.
     if (!user) {
-      throw new ApiError(401, "Invalid Token");
+      throw new ApiError(401, "Invalid token: User not found");
     }
 
-    // Attach the user information to the request object for further use.
+    // 4. Attach user to request
     req.user = user;
-
-    // Pass control to the next middleware in the stack.
     next();
+    
   } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid access token");
+    // More specific error handling
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new ApiError(401, "Invalid token: " + error.message);
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new ApiError(401, "Token expired");
+    }
+    // Re-throw if it's already an ApiError
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(401, "Authentication failed: " + error.message);
   }
 });
 
