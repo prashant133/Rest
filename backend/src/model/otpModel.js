@@ -1,16 +1,28 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const optSchema = new mongoose.Schema(
+const otpSchema = new mongoose.Schema(
   {
+    mobileNumber: {
+      type: String,
+      required: function () {
+        return this.deliveryMethod === 'sms';
+      },
+    },
     email: {
       type: String,
+      required: function () {
+        return this.deliveryMethod === 'email';
+      },
+    },
+    token: {
+      type: String, // JWT token for SMS, OTP for email
       required: true,
     },
-    otp: {
+    deliveryMethod: {
       type: String,
+      enum: ['sms', 'email'],
       required: true,
     },
-
     expiry: {
       type: Date,
       required: true,
@@ -19,16 +31,15 @@ const optSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Automatically delete expired OTPs
-optSchema.index({ expiry: 1 }, { expireAfterSeconds: 0 });
+// Automatically delete expired OTPs/tokens
+otpSchema.index({ expiry: 1 }, { expireAfterSeconds: 0 });
 
-optSchema.pre("validate", function (next) {
+otpSchema.pre('validate', function (next) {
   if (!this.expiry) {
-    const expiryTimeMs = 60 * 60 * 1000; // default 5 mins for login
+    const expiryTimeMs = 5 * 60 * 1000; // 5 minutes
     this.expiry = new Date(Date.now() + expiryTimeMs);
   }
   next();
 });
 
-const OTP = mongoose.model("otp", optSchema);
-module.exports = OTP;
+module.exports = mongoose.model('Otp', otpSchema);

@@ -1,7 +1,9 @@
 const sgMail = require("@sendgrid/mail");
 const ApiError = require("./ApiError");
 const asyncHandler = require("./asyncHandler");
+const nodemailer = require("nodemailer");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const soap = require("soap");
 
 const sendEmail = asyncHandler(async ({ to, subject, text, html }) => {
   try {
@@ -28,5 +30,6 @@ const sendEmail = asyncHandler(async ({ to, subject, text, html }) => {
     throw new ApiError(500, `Email sending failed: ${error.message}`);
   }
 });
+
 
 module.exports = sendEmail;
