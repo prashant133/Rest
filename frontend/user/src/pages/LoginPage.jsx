@@ -6,6 +6,8 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState("email"); // Default to email
+  const [otpToken, setOtpToken] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -19,26 +21,27 @@ function Login() {
           withCredentials: true,
         });
         if (response.data.success && response.data.data.role === "user") {
-          // If user is authenticated and has role "user", redirect to home
           navigate("/");
         } else {
-          // If role is not "user", clear cookies and show error
           await axios.post("http://localhost:5000/api/v1/user/logout", {}, { withCredentials: true });
           setError("This interface is for regular users only");
         }
       } catch {
-        // Not authenticated, stay on login page
         setError(null);
       }
     };
     checkAuth();
   }, [navigate]);
 
-  // Handle email and password submission to send OTP
+  // Handle email, password, and delivery method submission to send OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError("Email and password are required");
+      return;
+    }
+    if (!["email", "sms"].includes(deliveryMethod)) {
+      setError("Please select a valid delivery method");
       return;
     }
 
@@ -48,16 +51,25 @@ function Login() {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/user/send-otp",
-        { email, password },
+        { email, password, deliveryMethod },
         { withCredentials: true }
       );
       if (response.data.success) {
+        setOtpToken(response.data.data.token);
         setIsOtpSent(true);
       } else {
         setError(response.data.message || "Failed to send OTP");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Error sending OTP");
+      const message = err.response?.data?.message || "Error sending OTP";
+      if (deliveryMethod === "sms") {
+        setError(
+          "Unable to send OTP via SMS. Please use Email or ensure your mobile number is registered with R.E.S.T."
+        );
+        setDeliveryMethod("email"); // Switch to email for retry
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -67,7 +79,14 @@ function Login() {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (!otp) {
-      setError("OTP is required");
+      setError("Please enter the OTP");
+      return;
+    }
+    if (!otpToken || !deliveryMethod) {
+      setError("Session expired. Please request a new OTP.");
+      setIsOtpSent(false);
+      setOtpToken(null);
+      setDeliveryMethod("email");
       return;
     }
 
@@ -77,23 +96,24 @@ function Login() {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/v1/user/verify-otp",
-        { otp },
+        { otp, token: otpToken, deliveryMethod },
         { withCredentials: true }
       );
       if (response.data.success) {
-        // Check if the user has the "user" role
         const authResponse = await axios.get("http://localhost:5000/api/v1/user/check-auth", {
           withCredentials: true,
         });
         if (authResponse.data.success && authResponse.data.data.role === "user") {
+          setOtpToken(null);
+          setDeliveryMethod("email");
           navigate("/");
         } else {
-          // If role is not "user", trigger logout
           await axios.post("http://localhost:5000/api/v1/user/logout", {}, { withCredentials: true });
           setError("This interface is for regular users only");
+          setIsOtpSent(false);
         }
       } else {
-        setError(response.data.message || "Failed to verify OTP");
+        setError(response.data.message || "Invalid OTP. Please try again.");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Error verifying OTP");
@@ -137,7 +157,7 @@ function Login() {
                   required
                 />
               </div>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label htmlFor="password" className="block text-sm font-semibold mb-2">
                   Password
                 </label>
@@ -150,6 +170,33 @@ function Login() {
                   placeholder="Enter your password"
                   required
                 />
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold mb-2">OTP Delivery Method</label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="deliveryMethod"
+                      value="email"
+                      checked={deliveryMethod === "email"}
+                      onChange={(e) => setDeliveryMethod(e.target.value)}
+                      className="mr-2"
+                    />
+                    Email
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="deliveryMethod"
+                      value="sms"
+                      checked={deliveryMethod === "sms"}
+                      onChange={(e) => setDeliveryMethod(e.target.value)}
+                      className="mr-2"
+                    />
+                    SMS
+                  </label>
+                </div>
               </div>
               <button
                 type="submit"

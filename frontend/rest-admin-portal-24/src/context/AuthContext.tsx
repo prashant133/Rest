@@ -14,14 +14,16 @@ interface Notification {
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  verifyOtp: (otp: string) => Promise<boolean>;
+  login: (email: string, password: string, deliveryMethod: 'sms' | 'email') => Promise<boolean>;
+  verifyOtp: (otp: string, token: string, deliveryMethod: 'sms' | 'email') => Promise<boolean>;
   logout: () => Promise<void>;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   notifications: Notification[];
   dismissNotification: (id: number) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
+  otpToken: string | null; // Added to interface
+  deliveryMethod: 'sms' | 'email' | null; // Added to interface
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +42,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [otpToken, setOtpToken] = useState<string | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<'sms' | 'email' | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -50,10 +54,9 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTheme(savedTheme);
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     }
-
   }, []);
 
-    const checkAuthStatus = useCallback(async () => {
+  const checkAuthStatus = useCallback(async () => {
     try {
       console.log('Sending check-auth request to:', `${API_BASE_URL}/user/check-auth`);
       const response = await axios.get(`${API_BASE_URL}/user/check-auth`, {
@@ -78,18 +81,20 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, deliveryMethod: 'sms' | 'email') => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/user/send-otp`,
-        { email, password },
+        { email, password, deliveryMethod },
         { withCredentials: true, headers: { 'x-admin-frontend': 'true' } }
       );
 
       if (response.data.success) {
+        setOtpToken(response.data.data.token);
+        setDeliveryMethod(deliveryMethod);
         toast({
           title: 'OTP Sent',
-          description: 'An OTP has been sent to your email for verification.',
+          description: `An OTP has been sent to your ${deliveryMethod === 'sms' ? 'mobile number' : 'email'} for verification.`,
         });
         navigate('/verify-otp');
         return true;
@@ -115,16 +120,18 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [navigate, toast]);
 
-  const verifyOtp = useCallback(async (otp: string) => {
+  const verifyOtp = useCallback(async (otp: string, token: string, deliveryMethod: 'sms' | 'email') => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/user/verify-otp`,
-        { otp },
+        { otp, token, deliveryMethod },
         { withCredentials: true, headers: { 'x-admin-frontend': 'true' } }
       );
 
       if (response.data.success) {
         setIsAuthenticated(true);
+        setOtpToken(null);
+        setDeliveryMethod(null);
         toast({
           title: 'Login Successful',
           description: 'Welcome back to REST admin panel',
@@ -220,6 +227,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     notifications,
     dismissNotification,
     addNotification,
+    otpToken,
+    deliveryMethod,
   }), [
     isAuthenticated,
     login,
@@ -230,6 +239,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     notifications,
     dismissNotification,
     addNotification,
+    otpToken,
+    deliveryMethod,
   ]);
 
   return (
