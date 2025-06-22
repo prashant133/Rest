@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const api_base_url = import.meta.env.VITE_API_URL;
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,13 +19,13 @@ function Login() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/v1/user/check-auth", {
+        const response = await axios.get(`${api_base_url}/api/v1/user/check-auth`, {
           withCredentials: true,
         });
         if (response.data.success && response.data.data.role === "user") {
           navigate("/");
         } else {
-          await axios.post("http://localhost:5000/api/v1/user/logout", {}, { withCredentials: true });
+          await axios.post(`${api_base_url}/api/v1/user/logout`, {}, { withCredentials: true });
           setError("This interface is for regular users only");
         }
       } catch {
@@ -50,7 +52,7 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/user/send-otp",
+        `${api_base_url}/api/v1/user/send-otp`,
         { email, password, deliveryMethod },
         { withCredentials: true }
       );
@@ -95,12 +97,12 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/user/verify-otp",
+        `${api_base_url}/api/v1/user/verify-otp`,
         { otp, token: otpToken, deliveryMethod },
         { withCredentials: true }
       );
       if (response.data.success) {
-        const authResponse = await axios.get("http://localhost:5000/api/v1/user/check-auth", {
+        const authResponse = await axios.get(`${api_base_url}/api/v1/user/check-auth`, {
           withCredentials: true,
         });
         if (authResponse.data.success && authResponse.data.data.role === "user") {
@@ -108,7 +110,7 @@ function Login() {
           setDeliveryMethod("email");
           navigate("/");
         } else {
-          await axios.post("http://localhost:5000/api/v1/user/logout", {}, { withCredentials: true });
+          await axios.post(`${api_base_url}/api/v1/user/logout`, {}, { withCredentials: true });
           setError("This interface is for regular users only");
           setIsOtpSent(false);
         }

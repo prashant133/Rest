@@ -34,7 +34,7 @@ interface ApiErrorResponse {
   message?: string;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Events = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -75,7 +75,7 @@ const Events = () => {
   const fetchEvents = async () => {
     try {
       const response = await axios.get<{ success: boolean; data: Event[]; message: string }>(
-        `${API_BASE_URL}/event/get-all-event`,
+        `${API_BASE_URL}/api/v1/event/get-all-event`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -177,7 +177,7 @@ const Events = () => {
     if (!window.confirm('Are you sure you want to delete this file?')) return;
     try {
       const response = await axios.delete<{ success: boolean; data: Event; message: string }>(
-        `${API_BASE_URL}/event/delete-event-file/${eventId}/${encodeURIComponent(fileUrl)}`,
+        `${API_BASE_URL}/api/v1/event/delete-event-file/${eventId}/${encodeURIComponent(fileUrl)}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -255,7 +255,7 @@ const Events = () => {
     try {
       if (isEditMode && currentEvent) {
         const response = await axios.put<{ success: boolean; data: Event; message: string }>(
-          `${API_BASE_URL}/event/update-event/${currentEvent._id}`,
+          `${API_BASE_URL}/api/v1/event/update-event/${currentEvent._id}`,
           form,
           {
             headers: {
@@ -319,7 +319,7 @@ const Events = () => {
     if (!window.confirm('Are you sure you want to delete this event?')) return;
     try {
       const response = await axios.delete<{ success: boolean; data: object; message: string }>(
-        `${API_BASE_URL}/event/delete-event/${id}`,
+        `${API_BASE_URL}/api/v1/event/delete-event/${id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,

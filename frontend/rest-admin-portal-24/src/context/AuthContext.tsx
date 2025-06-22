@@ -27,7 +27,11 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+
 
 // Define hook first for Fast Refresh compatibility
 function useAuth() {
@@ -58,8 +62,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuthStatus = useCallback(async () => {
     try {
-      console.log('Sending check-auth request to:', `${API_BASE_URL}/user/check-auth`);
-      const response = await axios.get(`${API_BASE_URL}/user/check-auth`, {
+      console.log('Sending check-auth request to:', `${API_BASE_URL}/api/v1/user/check-auth`);
+      const response = await axios.get(`${API_BASE_URL}/api/v1/user/check-auth`, {
         withCredentials: true,
         headers: { 'x-admin-frontend': 'true' },
       });
@@ -84,7 +88,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback(async (email: string, password: string, deliveryMethod: 'sms' | 'email') => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/user/send-otp`,
+        `${API_BASE_URL}/api/v1/user/send-otp`,
         { email, password, deliveryMethod },
         { withCredentials: true, headers: { 'x-admin-frontend': 'true' } }
       );
@@ -123,7 +127,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const verifyOtp = useCallback(async (otp: string, token: string, deliveryMethod: 'sms' | 'email') => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/user/verify-otp`,
+        `${API_BASE_URL}/api/v1/user/verify-otp`,
         { otp, token, deliveryMethod },
         { withCredentials: true, headers: { 'x-admin-frontend': 'true' } }
       );
@@ -163,7 +167,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useCallback(async () => {
     try {
       await axios.post(
-        `${API_BASE_URL}/user/logout`,
+        `${API_BASE_URL}/api/v1/user/logout`,
         {},
         { withCredentials: true, headers: { 'x-admin-frontend': 'true' } }
       );

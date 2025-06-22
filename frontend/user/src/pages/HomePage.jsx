@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { FaLightbulb, FaBullseye, FaAward } from "react-icons/fa";
 import axios from "axios";
 
+const api_base_url = import.meta.env.VITE_API_URL;
+
 function Home() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ function Home() {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/v1/event/get-all-event",
+          `${api_base_url}/api/v1/event/get-all-event`,
           { withCredentials: true }
         );
         if (response.data.success) {
@@ -24,6 +26,7 @@ function Home() {
             return eventDate >= today;
           });
           setEvents(upcomingEvents);
+          setError(null);
         } else {
           setError("Failed to fetch events");
         }
@@ -126,13 +129,14 @@ function Home() {
                   <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
                   <p className="text-sm italic mb-2">{event.date}</p>
                   <p className="text-sm">{event.description}</p>
-                  {event.files.length > 0 && event.files[0].type.startsWith("image/") && (
-                    <img
-                      src={event.files[0].url}
-                      alt={event.title}
-                      className="mt-4 w-full h-32 object-cover rounded"
-                    />
-                  )}
+                  {event.files.length > 0 &&
+                    event.files[0].type.startsWith("image/") && (
+                      <img
+                        src={event.files[0].url}
+                        alt={event.title}
+                        className="mt-4 w-full h-32 object-cover rounded"
+                      />
+                    )}
                 </div>
               ))
             ) : (

@@ -3,6 +3,8 @@ import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const api_base_url = import.meta.env.VITE_API_URL;
+
 function Events() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -17,11 +19,12 @@ function Events() {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/v1/event/get-all-event",
+          `${api_base_url}/api/v1/event/get-all-event`,
           { withCredentials: true }
         );
         if (response.data.success) {
           setEvents(response.data.data);
+          setError(null);
         } else {
           setError("Failed to fetch events");
         }
@@ -41,7 +44,7 @@ function Events() {
       setLoading(true);
       setError(null);
       const response = await axios.get(
-        `http://localhost:5000/api/v1/event/get-event/${id}`,
+        `${api_base_url}/api/v1/event/get-event/${id}`,
         { withCredentials: true }
       );
       if (response.data.success) {
@@ -59,35 +62,32 @@ function Events() {
   // Handle Register Now button click
   const handleRegister = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/v1/user/check-auth", {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${api_base_url}/api/v1/user/check-auth`,
+        { withCredentials: true }
+      );
       if (response.data.success && response.data.data.role === "user") {
-        // User is logged in and has role "user"
         setNotification({
           message: "Registered successfully!",
           type: "success",
         });
-        // Clear notification after 3 seconds
         setTimeout(() => setNotification(null), 3000);
       } else {
-        // User is authenticated but not a "user" role
         navigate("/login");
       }
     } catch {
-      // User is not authenticated, redirect to login
       navigate("/login");
     }
   };
 
-  // Filter upcoming events (events with a date in the future)
+  // Filter upcoming events (future dates)
   const upcomingEvents = events.filter((event) => {
     const eventDate = new Date(event.date);
     const today = new Date();
     return eventDate >= today;
   });
 
-  // Filter recent events (events with a date in the past)
+  // Filter recent events (past dates)
   const recentEvents = events.filter((event) => {
     const eventDate = new Date(event.date);
     const today = new Date();
@@ -152,7 +152,6 @@ function Events() {
               {selectedEvent.location}
             </li>
           </ul>
-          {/* Display all files (images only for simplicity) */}
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
             {selectedEvent.files
               .filter((file) => file.type.startsWith("image/"))
@@ -206,7 +205,7 @@ function Events() {
                   </div>
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering the card's onClick
+                      e.stopPropagation();
                       handleRegister(event._id);
                     }}
                     className="mt-6 bg-black text-white text-sm font-semibold py-2 rounded hover:bg-gray-800 transition"

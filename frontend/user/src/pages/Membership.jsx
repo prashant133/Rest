@@ -4,6 +4,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 
+const api_base_url = import.meta.env.VITE_API_URL;
+
 function Membership() {
   const [formData, setFormData] = useState({
     employeeId: '',
@@ -56,7 +58,9 @@ function Membership() {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/v1/user/register', formData);
+      const response = await axios.post(`${api_base_url}/api/v1/user/register`, formData, {
+        withCredentials: true,
+      });
       setSuccess(response.data.message);
       setMembershipNumber(response.data.data.membershipNumber || 'N/A');
       setRegistrationNumber(response.data.data.registrationNumber || 'N/A');
@@ -94,7 +98,6 @@ function Membership() {
     setMembershipNumber('');
     setRegistrationNumber('');
   };
-
 
   const minDob = new Date(1900, 0, 1);
   const maxDob = new Date();

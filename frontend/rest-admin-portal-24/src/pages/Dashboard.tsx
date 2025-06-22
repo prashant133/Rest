@@ -9,7 +9,7 @@ import axios, { AxiosError } from 'axios';
 import { format, parseISO, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface RawEvent {
   _id: string;
@@ -64,8 +64,8 @@ const Dashboard = () => {
         
         // Fetch events and users in parallel
         const [eventsResponse, usersResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/event/get-all-event`, { withCredentials: true }),
-          axios.get(`${API_BASE_URL}/user/get-all-users`, { withCredentials: true })
+          axios.get(`${API_BASE_URL}/api/v1/event/get-all-event`, { withCredentials: true }),
+          axios.get(`${API_BASE_URL}/api/v1/user/get-all-users`, { withCredentials: true })
         ]);
 
         // Process events
@@ -153,7 +153,7 @@ const Dashboard = () => {
     if (matchingEvents.length > 0) {
       try {
         const eventId = matchingEvents[0]._id;
-        const response = await axios.get(`${API_BASE_URL}/event/get-event/${eventId}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/event/get-event/${eventId}`, {
           withCredentials: true,
         });
         const eventData: RawEvent = response.data.data;

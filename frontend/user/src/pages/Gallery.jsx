@@ -11,6 +11,8 @@ const categories = [
   "Ceremonies",
 ];
 
+const api_base_url = import.meta.env.VITE_API_URL;
+
 function Gallery() {
   const [activeCategory, setActiveCategory] = useState("All Photos");
   const [photos, setPhotos] = useState([]);
@@ -24,11 +26,12 @@ function Gallery() {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/v1/gallery/get-all-images",
+          `${api_base_url}/api/v1/gallery/get-all-images`,
           { withCredentials: true }
         );
         if (response.data.success) {
           setPhotos(response.data.data);
+          setError(null);
         } else {
           setError("Failed to fetch gallery posts");
         }
@@ -48,7 +51,7 @@ function Gallery() {
       setLoading(true);
       setError(null);
       const response = await axios.get(
-        `http://localhost:5000/api/v1/gallery/get-image/${id}`,
+        `${api_base_url}/api/v1/gallery/get-image/${id}`,
         { withCredentials: true }
       );
       if (response.data.success) {

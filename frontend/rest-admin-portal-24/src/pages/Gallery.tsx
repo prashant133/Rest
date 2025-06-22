@@ -25,7 +25,7 @@ interface GalleryPost {
   createdAt: string;
 }
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const categories = [
   "All Photos",
@@ -51,7 +51,7 @@ const Gallery = () => {
   const fetchPosts = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/gallery/get-all-images`);
+      const response = await axios.get(`${API_BASE_URL}/api/v1/gallery/get-all-images`);
       setPosts(response.data.data);
     } catch (error) {
       handleApiError(error, "Failed to fetch posts");
@@ -76,7 +76,7 @@ const Gallery = () => {
 
     try {
       setIsLoading(true);
-      await axios.delete(`${API_BASE_URL}/gallery/delete-image/${id}/${imageId}`, {
+      await axios.delete(`${API_BASE_URL}/api/v1/gallery/delete-image/${id}/${imageId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -106,7 +106,7 @@ const Gallery = () => {
 
     try {
       setIsLoading(true);
-      await axios.delete(`${API_BASE_URL}/gallery/delete-post/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/v1/gallery/delete-post/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -179,7 +179,7 @@ const Gallery = () => {
       formData.append('category', category);
       formData.append('date', date);
 
-      const response = await axios.post(`${API_BASE_URL}/gallery/upload-images`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/gallery/upload-images`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${localStorage.getItem('token')}`,

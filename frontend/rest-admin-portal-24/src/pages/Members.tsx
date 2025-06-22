@@ -17,7 +17,7 @@ import axios, { AxiosError } from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = 'http://localhost:5000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 interface Member {
   _id: string;
@@ -116,7 +116,7 @@ const Members = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get(`${API_BASE_URL}/user/get-all-users`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/user/get-all-users`, {
         withCredentials: true,
         headers: { 'x-admin-frontend': 'true' }
       });
@@ -186,7 +186,7 @@ const Members = () => {
   const handleEdit = async (member: Member) => {
     try {
       setError('');
-      const response = await axios.get(`${API_BASE_URL}/user/get-user/${member._id}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/user/get-user/${member._id}`, {
         withCredentials: true,
         headers: { 'x-admin-frontend': 'true' }
       });
@@ -249,7 +249,7 @@ const Members = () => {
       if (isEditMode && currentMember) {
         // Update existing member
         await axios.patch(
-          `${API_BASE_URL}/user/update-user/${currentMember._id}`,
+          `${API_BASE_URL}/api/v1/user/update-user/${currentMember._id}`,
           formData,
           {
             withCredentials: true,
@@ -263,8 +263,8 @@ const Members = () => {
       } else {
         // Create new member (requires password for registration)
         await axios.post(
-          `${API_BASE_URL}/user/register`,
-          { ...formData, password: 'defaultPassword123' }, // Note: In production, handle password securely
+          `${API_BASE_URL}/api/v1/user/register`,
+          { ...formData, password: 'Password123' }, // Note: In production, handle password securely
           {
             withCredentials: true,
             headers: { 'x-admin-frontend': 'true' }
@@ -298,7 +298,7 @@ const Members = () => {
     try {
       setError('');
       await axios.delete(
-        `${API_BASE_URL}/user/delete-user/${id}`,
+        `${API_BASE_URL}/api/v1/user/delete-user/${id}`,
         {
           withCredentials: true,
           headers: { 'x-admin-frontend': 'true' }
