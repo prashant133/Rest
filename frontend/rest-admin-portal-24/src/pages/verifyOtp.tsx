@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -8,19 +8,45 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const VerifyOtp: React.FC = () => {
   const [otp, setOtp] = useState('');
-  const { verifyOtp } = useAuth();
+  const { verifyOtp, otpToken, deliveryMethod } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Redirect to login if otpToken or deliveryMethod is missing
+  useEffect(() => {
+    if (!otpToken || !deliveryMethod) {
+      toast({
+        title: 'Session Expired',
+        description: 'Please log in again to receive an OTP.',
+        variant: 'destructive',
+      });
+      navigate('/login');
+    }
+  }, [otpToken, deliveryMethod, navigate, toast]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await verifyOtp(otp);
+    if (!otpToken || !deliveryMethod) {
+      toast({
+        title: 'Error',
+        description: 'No OTP token or delivery method found. Please log in again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const success = await verifyOtp(otp, otpToken, deliveryMethod);
     if (success) {
       toast({
         title: 'OTP Verified',
         description: 'You have successfully verified your OTP.',
       });
       navigate('/');
+    } else {
+      toast({
+        title: 'OTP Verification Failed',
+        description: 'Please check your OTP and try again.',
+        variant: 'destructive',
+      });
     }
   };
 

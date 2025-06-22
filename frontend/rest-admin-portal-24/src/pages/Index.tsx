@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState('login');
@@ -15,14 +18,23 @@ const Index = () => {
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  
+  const [deliveryMethod, setDeliveryMethod] = useState<'sms' | 'email'>('email'); // New state for delivery method
+
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password)) {
-      navigate('/');
+    const success = await login(email, password, deliveryMethod);
+    if (success) {
+      navigate('/verify-otp'); // Navigate to OTP verification page
+    } else {
+      toast({
+        title: 'Login Failed',
+        description: 'Please check your credentials and try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -92,12 +104,30 @@ const Index = () => {
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
+
+          <div>
+            <Label>OTP Delivery Method</Label>
+            <RadioGroup
+              value={deliveryMethod}
+              onValueChange={(value: 'sms' | 'email') => setDeliveryMethod(value)}
+              className="flex space-x-4 mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email" id="email-method" />
+                <Label htmlFor="email-method">Email</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sms" id="sms-method" />
+                <Label htmlFor="sms-method">SMS</Label>
+              </div>
+            </RadioGroup>
+          </div>
           
           <Button 
             type="submit" 
             className="w-full h-12 bg-yellow-400 hover:bg-yellow-500 text-blue-800 font-semibold rounded-lg transition-colors"
           >
-            Login
+            Send OTP
           </Button>
           
           <div className="text-center">

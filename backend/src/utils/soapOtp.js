@@ -72,7 +72,7 @@ async function confirmOtp(token, otp) {
     if (!token || !otp) {
       throw new ApiError(400, 'Token and OTP are required');
     }
-    const { mdn, trId } = jwt.verify(token, OTPTodos_SECRET_KEY);
+    const { mdn, trId } = jwt.verify(token, OTP_SECRET_KEY);
 
     const client = await getClient();
     const [res] = await client.ValidateOTPAsync({
