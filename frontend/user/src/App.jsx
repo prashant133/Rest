@@ -9,6 +9,7 @@ import Gallery from "./pages/Gallery";
 import Membership from "./pages/Membership";
 import Branches from "./pages/Branches";
 import Login from "./pages/LoginPage";
+import Profile  from "./pages/profile";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/membership" element={<Membership />} />
           <Route path="/branch" element={<Branches />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile/>}/>
         </Routes>
       </Layout>
     </Router>

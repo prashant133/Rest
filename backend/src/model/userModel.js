@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
   {
@@ -152,8 +152,32 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "user"],
       default: "user",
     },
+      membershipStatus: {
+      type: String,
+      enum: ["pending", "approved"],
+      default: "pending",
+    },
     refreshToken: {
       type: String,
+    },
+    profilePic: {
+      type: String, // URL for profile picture
+      default: "", // Optional, can be empty
+    },
+    files: {
+      type: [
+        {
+          url: { type: String, required: true },
+          type: { type: String, required: true },
+        },
+      ],
+      validate: {
+        validator: function (value) {
+          return value.length <= 1; // Max 1 additional file
+        },
+        message: "You can only upload up to 1 additional file",
+      },
+      default: [], // Optional, can be empty
     },
   },
   { timestamps: true }
@@ -169,7 +193,6 @@ userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// generating access token
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
@@ -182,7 +205,6 @@ userSchema.methods.generateAccessToken = function () {
   );
 };
 
-// generating refresh token
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {

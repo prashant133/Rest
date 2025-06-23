@@ -173,7 +173,7 @@ function Gallery() {
         </section>
       )}
 
-      {/* Banner */}
+      {/* Banner
       <section className="bg-black text-white text-center py-20 px-6">
         <h2 className="text-2xl font-bold mb-4">Share Your Memories</h2>
         <p className="max-w-2xl mx-auto mb-6">
@@ -183,7 +183,7 @@ function Gallery() {
         <button className="bg-white text-black px-5 py-2 rounded hover:bg-gray-100 transition font-semibold">
           Submit Photos
         </button>
-      </section>
+      </section> */}
     </div>
   );
 }
