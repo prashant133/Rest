@@ -30,8 +30,13 @@ bash
 - CLOUDINARY_CLOUD_NAME=your_cloud_name
 - CLOUDINARY_API_KEY=your_cloudinary_api_key
 - CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-- SENDGRID_API_KEY=your_sendgrid_api_key
-- SENDGRID_VERIFIED_SENDER=your_verified_sender_email
+
+- EMAIL_USER=
+- EMAIL_PASS=
+- EMAIL_HOST=smtp.gmail.com
+- EMAIL_PORT=587
+- EMAIL_FROM_NAME=
+
 
 # Running the Application
 ## Start the backend server:
