@@ -14,6 +14,7 @@ const {
 const verifyJWT = require("../middleware/authMiddleware");
 const verifyAdmin = require("../middleware/verifyAdmin");
 const upload = require("../middleware/multer");
+const ApiResponse= require("../utils/ApiResponse");
 
 const router = express.Router();
 
@@ -31,16 +32,23 @@ router.post("/verify-otp", verifyUserOTPLogin);
 
 // Protected routes
 router.post("/logout", logoutUserController);
-router.get("/check-auth",  async (req, res) => {
-  return res
-    .status(200)
-    .json(
-      new (require("../utils/ApiResponse"))(
-        200,
-        req.user,
-        "User is authenticated"
-      )
-    );
+
+router.get("/check-auth", verifyJWT, async (req, res) => {
+  console.log("Check-auth user:", req.user || "No user");
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "No authenticated user found",
+      statusCode: 401,
+    });
+  }
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      req.user,
+      "User is authenticated"
+    )
+  );
 });
 
 // Admin-only routes
