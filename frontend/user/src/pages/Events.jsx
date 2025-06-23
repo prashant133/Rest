@@ -221,7 +221,7 @@ function Events() {
         </section>
       )}
 
-      {/* Current Discussions Section */}
+      {/* Current Discussions Section
       {!selectedEvent && !loading && !error && (
         <section className="py-20 px-6 bg-white text-gray-800">
           <h2 className="text-3xl font-bold text-center mb-12">Current Discussions</h2>
@@ -272,7 +272,7 @@ function Events() {
             </button>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Recent Events Section */}
       {!selectedEvent && !loading && !error && (

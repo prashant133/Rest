@@ -1,31 +1,34 @@
-
 const ApiError = require("./ApiError");
 
-function validateUploadedFiles(files, maxFiles = 10) {
-  if (!files || files.length < 1 || files.length > maxFiles) {
-    throw new ApiError(400, `At least one file is required (max ${maxFiles})`);
+function validateUserFiles(files) {
+  if (!files || !files.profilePic || files.profilePic.length !== 1) {
+    throw new ApiError(400, "Exactly one profile picture is required");
   }
 
+  if (files.additionalFile && files.additionalFile.length > 1) {
+    throw new ApiError(400, "Only one additional file is allowed");
+  }
 
-  const fileCounts = {
-    images: 0,
-    videos: 0,
-    documents: 0,
-  };
+  const profilePic = files.profilePic[0];
+  if (!profilePic.mimetype.startsWith("image/")) {
+    throw new ApiError(400, "Profile picture must be an image");
+  }
 
-  files.forEach((file) => {
-    if (file.mimetype.startsWith("image/")) fileCounts.images++;
-    else if (file.mimetype.startsWith("video/")) fileCounts.videos++;
-    else if (
-      file.mimetype === "application/pdf" ||
-      file.mimetype.includes("msword") ||
-      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ) fileCounts.documents++;
-  });
-
-  if (fileCounts.images > 5) throw new ApiError(400, "Maximum 5 images allowed");
-  if (fileCounts.videos > 3) throw new ApiError(400, "Maximum 3 videos allowed");
-  if (fileCounts.documents > 2) throw new ApiError(400, "Maximum 2 documents allowed");
+  if (files.additionalFile) {
+    const additionalFile = files.additionalFile[0];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(additionalFile.mimetype)) {
+      throw new ApiError(400, "Additional file must be an image, PDF, or Word document");
+    }
+  }
 }
 
-module.exports = validateUploadedFiles;
+module.exports = validateUserFiles;

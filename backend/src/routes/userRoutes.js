@@ -1,37 +1,64 @@
-  const express = require("express");
-  const {
-    registerUserController,
-    sendOTPVerificationLogin,
-    verifyUserOTPLogin,
-    logoutUserController,
-    getAllUsersController,
-    getUserByIdController,
-    updateUserController,
-    deleteUserController,
-  } = require("../controller/userController");
-  const verifyJWT = require("../middleware/authMiddleware");
-  const verifyAdmin = require("../middleware/verifyAdmin");
-  const router = express.Router();
+const express = require("express");
+const {
+  registerUserController,
+  sendOTPVerificationLogin,
+  verifyUserOTPLogin,
+  logoutUserController,
+  getAllUsersController,
+  getUserByIdController,
+  updateUserController,
+  deleteUserController,
+  approveMembershipController,
+  declineMembershipController,
+} = require("../controller/userController");
+const verifyJWT = require("../middleware/authMiddleware");
+const verifyAdmin = require("../middleware/verifyAdmin");
+const upload = require("../middleware/multer");
 
-  // Public routes
-  router.post("/register", registerUserController);
-  router.post("/send-otp", sendOTPVerificationLogin);
-  router.post("/verify-otp", verifyUserOTPLogin);
+const router = express.Router();
 
-  // Protected routes (require authentication)
-  router.post("/logout", verifyJWT, logoutUserController);
-  router.get("/check-auth", verifyJWT, async (req, res) => {
-    return res.status(200).json(
-      new (require("../utils/ApiResponse"))(200, req.user, "User is authenticated")
+// Public routes
+router.post(
+  "/register",
+  upload.fields([
+    { name: "profilePic", maxCount: 1 },
+    { name: "additionalFile", maxCount: 1 },
+  ]),
+  registerUserController
+);
+router.post("/send-otp", sendOTPVerificationLogin);
+router.post("/verify-otp", verifyUserOTPLogin);
+
+// Protected routes
+router.post("/logout", logoutUserController);
+router.get("/check-auth",  async (req, res) => {
+  return res
+    .status(200)
+    .json(
+      new (require("../utils/ApiResponse"))(
+        200,
+        req.user,
+        "User is authenticated"
+      )
     );
-  });
+});
 
-  // Admin-only routes
-  router.get("/get-all-users", getAllUsersController);
-  router.delete("/delete-user/:id",  deleteUserController);
+// Admin-only routes
+router.get("/get-all-users",getAllUsersController);
+router.delete("/delete-user/:id",deleteUserController);
+router.post("/approve-membership/:id",approveMembershipController);
+router.post("/decline-membership/:id",declineMembershipController);
 
-  // Authenticated user routes (get and update user by ID)
-  router.get("/get-user/:id",  getUserByIdController);
-  router.patch("/update-user/:id",  updateUserController);
+// Authenticated user routes
+router.get("/get-user/:id", verifyJWT, getUserByIdController);
+router.patch(
+  "/update-user/:id",
+  verifyJWT,
+  upload.fields([
+    { name: "profilePic", maxCount: 1 },
+    { name: "additionalFile", maxCount: 1 },
+  ]),
+  updateUserController
+);
 
-  module.exports = router;
+module.exports = router;
