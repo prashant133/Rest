@@ -79,50 +79,53 @@ function Login() {
 
   // Handle OTP verification
   const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (!otp) {
-      setError("Please enter the OTP");
-      return;
-    }
-    if (!otpToken || !deliveryMethod) {
-      setError("Session expired. Please request a new OTP.");
-      setIsOtpSent(false);
-      setOtpToken(null);
-      setDeliveryMethod("email");
-      return;
-    }
+  e.preventDefault();
+  if (!otp) {
+    setError("Please enter the OTP");
+    return;
+  }
+  if (!otpToken || !deliveryMethod) {
+    setError("Session expired. Please request a new OTP.");
+    setIsOtpSent(false);
+    setOtpToken(null);
+    setDeliveryMethod("email");
+    return;
+  }
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await axios.post(
-        `${api_base_url}/api/v1/user/verify-otp`,
-        { otp, token: otpToken, deliveryMethod },
-        { withCredentials: true }
-      );
-      if (response.data.success) {
-        const authResponse = await axios.get(`${api_base_url}/api/v1/user/check-auth`, {
-          withCredentials: true,
-        });
-        if (authResponse.data.success && authResponse.data.data.role === "user") {
-          setOtpToken(null);
-          setDeliveryMethod("email");
-          navigate("/");
-        } else {
-          await axios.post(`${api_base_url}/api/v1/user/logout`, {}, { withCredentials: true });
-          setError("This interface is for regular users only");
-          setIsOtpSent(false);
-        }
+  try {
+    console.log("Sending OTP verification:", { otp, token: otpToken, deliveryMethod });
+    const response = await axios.post(
+      `${api_base_url}/api/v1/user/verify-otp`,
+      { otp: otp.trim(), token: otpToken.trim(), deliveryMethod },
+      { withCredentials: true }
+    );
+    console.log("Verify OTP response:", response.data);
+    if (response.data.success) {
+      const authResponse = await axios.get(`${api_base_url}/api/v1/user/check-auth`, {
+        withCredentials: true,
+      });
+      if (authResponse.data.success && authResponse.data.data.role === "user") {
+        setOtpToken(null);
+        setDeliveryMethod("email");
+        navigate("/");
       } else {
-        setError(response.data.message || "Invalid OTP. Please try again.");
+        await axios.post(`${api_base_url}/api/v1/user/logout`, {}, { withCredentials: true });
+        setError("This interface is for regular users only");
+        setIsOtpSent(false);
       }
-    } catch (err) {
-      setError(err.response?.data?.message || "Error verifying OTP");
-    } finally {
-      setLoading(false);
+    } else {
+      setError(response.data.message || "Invalid OTP. Please try again.");
     }
-  };
+  } catch (err) {
+    console.error("Verify OTP error:", err.response?.data || err.message);
+    setError(err.response?.data?.message || "Error verifying OTP");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
