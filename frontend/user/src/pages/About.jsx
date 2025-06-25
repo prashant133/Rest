@@ -8,18 +8,30 @@ import {
   FaBullseye,
   FaAward,
 } from "react-icons/fa";
+import rest from '../assets/rest.jpg'
 
 function About() {
   return (
     <>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-[#0c1c35] to-[#13284c] text-white py-20 text-center">
-        <h1 className="text-4xl font-bold mb-0">Welcome to R.E.S.T</h1>
-        <p className="text-lg max-w-2xl mx-auto mt-2">
-          Supporting retired telecommunications professionals with community,
-          resources, and ongoing connections.
-        </p>
-      </section>
+     {/* Hero Section */}
+           <section
+             className="py-20 " // Added mt-16 for header clearance
+             style={{
+               backgroundImage: `url(${rest})`,
+               backgroundSize: 'cover', // Cover full width
+               backgroundPosition: 'center 20%', // Shift image down
+               backgroundRepeat: 'no-repeat', // Prevent tiling
+               backgroundBlendMode: 'overlay', // Blend with gradient
+               // backgroundColor: '#0c1c35', // Solid color fallback
+               position: 'relative', // For overlay
+               minHeight: '80vh', // Ensure height
+             }}
+           >
+             <div className="absolute inset-0 bg-black opacity-50"></div>
+             <div className="relative z-10">
+               {/* Empty as per previous request */}
+             </div>
+           </section>
 
       {/* Main Content */}
       <div className="px-6 py-16">
