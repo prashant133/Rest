@@ -18,9 +18,9 @@ async function registerAdmin() {
     console.log("Connected to MongoDB");
 
     const adminData = {
-      employeeId: "ADMIN0017",
-      username: "admin17",
-      surname: "admin17",
+      employeeId: "ADMIN001",
+      username: "admin1",
+      surname: "admin1",
       address: "address",
       province: "provie",
       district: "distct",
@@ -28,18 +28,18 @@ async function registerAdmin() {
       wardNumber: "2",
       tole: "toe",
       telephoneNumber: "12341s32132",
-      mobileNumber: "987651123123",
+      mobileNumber: "9861599595",
       dob: "1990-01-11",
       postAtRetirement: "admin",
-      pensionLeaseNumber: "PLN0017",
+      pensionLeaseNumber: "PLN001",
       office: "head offce",
       serviceStartDate: "2010-01-1",
       serviceRetirementDate: "2040-01-1",
-      membershipNumber: "MN0017",
-      registrationNumber: "RN0017",
+      membershipNumber: "MN001",
+      registrationNumber: "RN001",
       dateOfFillUp: "2023-01-11",
       place: "plae",
-      email: "shrestha.ujjwol1@gmail.com",
+      email: "zevilsshrestha007@gmail.com",
       password: "admin123", // Do NOT hash here; let the model handle it
       role: "admin",
     };

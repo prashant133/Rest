@@ -1,6 +1,6 @@
   const asyncHandler = require("../utils/asyncHandler");
   const Event = require("../model/eventModel");
-  const validateUploadedFiles = require("../utils/valiadateUploadedFiles");
+  const {validateUploadedFiles} = require("../utils/valiadateUploadedFiles");
   const ApiError = require("../utils/ApiError");
   const ApiResponse = require("../utils/ApiResponse");
   const { uploadFileWithFolderLogic, deleteFileFromCloudinary} = require("../helper/cloudinaryHepler");

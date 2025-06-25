@@ -271,7 +271,7 @@ const Events = () => {
         });
       } else {
         const response = await axios.post<{ success: boolean; data: Event; message: string }>(
-          `${API_BASE_URL}/event/create-event`,
+          `${API_BASE_URL}/api/v1/event/create-event`,
           form,
           {
             headers: {
