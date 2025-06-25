@@ -238,13 +238,8 @@ function Login() {
           )}
           <p className="text-center mt-4 text-sm">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-blue-400 hover:underline">
+            <Link to="/membership" className="text-blue-400 hover:underline">
               Sign Up
-            </Link>
-          </p>
-          <p className="text-center mt-2 text-sm">
-            <Link to="/forgot-password" className="text-blue-400 hover:underline">
-              Forgot Password?
             </Link>
           </p>
         </div>
