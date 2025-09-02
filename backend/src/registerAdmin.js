@@ -2,25 +2,24 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const User = require("./model/userModel");
 
-// Load .env file
-dotenv.config();
-
-// Debug: Log MONGO_URI to verify
+// Force load .env.production
+dotenv.config({ path: ".env.production" });
+console.log("Loaded environment from: .env.production");
 console.log("MONGO_URI:", process.env.MONGO_URI);
 
 async function registerAdmin() {
   try {
     if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is not defined in the .env file");
+      throw new Error("MONGO_URI is not defined in .env.production");
     }
 
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB");
 
     const adminData = {
-      employeeId: "ADMIN001",
-      username: "admin1",
-      surname: "admin1",
+      employeeId: "ADMIN10",
+      username: "admin10",
+      surname: "admin10",
       address: "address",
       province: "provie",
       district: "distct",
@@ -28,19 +27,19 @@ async function registerAdmin() {
       wardNumber: "2",
       tole: "toe",
       telephoneNumber: "12341s32132",
-      mobileNumber: "9861599595",
-      dob: "1990-01-11",
+      mobileNumber: "9851347856",
+      dob: "1990-01-10",
       postAtRetirement: "admin",
-      pensionLeaseNumber: "PLN001",
+      pensionLeaseNumber: "PLN10",
       office: "head offce",
-      serviceStartDate: "2010-01-1",
-      serviceRetirementDate: "2040-01-1",
-      membershipNumber: "MN001",
-      registrationNumber: "RN001",
-      dateOfFillUp: "2023-01-11",
+      serviceStartDate: "2010-01-10",
+      serviceRetirementDate: "2040-01-10",
+      membershipNumber: "MN10",
+      registrationNumber: "RN10",
+      dateOfFillUp: "2023-01-10",
       place: "plae",
-      email: "zevilsshrestha007@gmail.com",
-      password: "admin123", // Do NOT hash here; let the model handle it
+      email: "restntcadmi@gmail.com",
+      password: "admin123", // let model handle hashing
       role: "admin",
     };
 

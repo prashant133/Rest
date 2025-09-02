@@ -22,18 +22,14 @@ interface AuthContextType {
   notifications: Notification[];
   dismissNotification: (id: number) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
-  otpToken: string | null; // Added to interface
-  deliveryMethod: 'sms' | 'email' | null; // Added to interface
+  otpToken: string | null;
+  deliveryMethod: 'sms' | 'email' | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-
-
-// Define hook first for Fast Refresh compatibility
 function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -63,9 +59,13 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAuthStatus = useCallback(async () => {
     try {
       console.log('Sending check-auth request to:', `${API_BASE_URL}/api/v1/user/check-auth`);
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${API_BASE_URL}/api/v1/user/check-auth`, {
-        withCredentials: true,
-        headers: { 'x-admin-frontend': 'true' },
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+          'x-admin-frontend': 'true',
+        },
+        withCredentials: true, // Keep for cookie fallback
       });
       console.log('Check-auth response:', response.data);
       if (response.status === 200 && response.data.data) {
@@ -133,6 +133,11 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (response.data.success) {
+        const { accessToken } = response.data.data;
+        if (!accessToken) {
+          throw new Error("No access token received from server");
+        }
+        localStorage.setItem("token", accessToken); // Store token
         setIsAuthenticated(true);
         setOtpToken(null);
         setDeliveryMethod(null);
@@ -153,6 +158,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       const message = error instanceof AxiosError
         ? error.response?.data?.message || 'An error occurred during OTP verification'
+        : error instanceof Error
+        ? error.message
         : 'An unexpected error occurred during OTP verification';
       
       toast({
@@ -169,8 +176,15 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       await axios.post(
         `${API_BASE_URL}/api/v1/user/logout`,
         {},
-        { withCredentials: true, headers: { 'x-admin-frontend': 'true' } }
+        { 
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            'x-admin-frontend': 'true' 
+          },
+          withCredentials: true 
+        }
       );
+      localStorage.removeItem("token"); // Clear token
       setIsAuthenticated(false);
       navigate('/login');
       toast({
@@ -254,5 +268,5 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Named exports for better Fast Refresh compatibility
+// Named exports
 export { AuthProvider, useAuth };

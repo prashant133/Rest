@@ -61,7 +61,6 @@ router.post("/decline-membership/:id",declineMembershipController);
 router.get("/get-user/:id", verifyJWT, getUserByIdController);
 router.patch(
   "/update-user/:id",
-  verifyJWT,
   upload.fields([
     { name: "profilePic", maxCount: 1 },
     { name: "additionalFile", maxCount: 1 },

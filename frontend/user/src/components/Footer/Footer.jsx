@@ -1,8 +1,19 @@
 // src/components/Footer.jsx
+import { Link } from "react-router-dom";
 import { FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
-import logo from "../../assets/logo.jpg"; 
+import logo from "../../assets/logo.jpg";
 
 function Footer() {
+  const links = [
+    { name: "About Us", path: "/aboutus" },
+    { name: "Events", path: "/events" },
+    { name: "Gallery", path: "/gallery" },
+    { name: "Submit Photos", path: "/gallery" }, // adjust path if needed
+    { name: "Contact", path: "/contact" },
+    { name: "Membership", path: "/membership" },
+    { name: "Login", path: "/login" },
+  ];
+
   return (
     <footer className="bg-[#0c1c35] text-gray-300 py-10 px-6">
       <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
@@ -25,22 +36,11 @@ function Footer() {
         <div>
           <h3 className="text-white font-semibold mb-2">Quick Links</h3>
           <ul className="space-y-1 text-sm">
-            {[
-              "About Us",
-              "Events",
-              "Gallery",
-              "Submit Photos",
-              "Contact",
-              "Membership",
-              "Login",
-            ].map((link) => (
-              <li key={link}>
-                <a
-                  href={`/${link.toLowerCase().replace(/\s+/g, "")}`}
-                  className="hover:underline"
-                >
-                  {link}
-                </a>
+            {links.map((link) => (
+              <li key={link.name}>
+                <Link to={link.path} className="hover:underline">
+                  {link.name}
+                </Link>
               </li>
             ))}
           </ul>

@@ -1,90 +1,121 @@
-// src/pages/About.jsx
-
-import {
-  FaUsers,
-  FaBuilding,
-  FaHandsHelping,
-  FaLightbulb,
-  FaBullseye,
-  FaAward,
-} from "react-icons/fa";
-import rest from '../assets/rest.jpg'
+import { useState, useEffect } from "react";
+import { FaUsers, FaBuilding, FaHandsHelping, FaLightbulb, FaBullseye, FaAward } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import rest from "../assets/rest.jpg";
 
 function About() {
+  const [currentCommittee, setCurrentCommittee] = useState([]);
+  const [chairman, setChairman] = useState(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+  // Helper function to generate initials from a name
+  const getInitials = (name) => {
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Fetch current committee members and chairman
+  useEffect(() => {
+    const fetchCurrentCommittee = async () => {
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/api/v1/committee-members?committeeTitle=Central Working Committee (2081/09/20 - Current)`,
+          { withCredentials: true }
+        );
+
+
+        setCurrentCommittee(response.data.data);
+        const chairmanData = response.data.data.find((member) => member.role === "Chairman");
+        setChairman(chairmanData || null);
+      } catch (error) {
+        toast.error("Failed to load committee members. Please try again later.");
+        console.error("Error fetching current committee:", error);
+      }
+    };
+    fetchCurrentCommittee();
+  }, []);
+
   return (
     <>
-     {/* Hero Section */}
-           <section
-             className="py-20 " // Added mt-16 for header clearance
-             style={{
-               backgroundImage: `url(${rest})`,
-               backgroundSize: 'cover', // Cover full width
-               backgroundPosition: 'center 20%', // Shift image down
-               backgroundRepeat: 'no-repeat', // Prevent tiling
-               backgroundBlendMode: 'overlay', // Blend with gradient
-               // backgroundColor: '#0c1c35', // Solid color fallback
-               position: 'relative', // For overlay
-               minHeight: '80vh', // Ensure height
-             }}
-           >
-             <div className="absolute inset-0 bg-black opacity-50"></div>
-             <div className="relative z-10">
-               {/* Empty as per previous request */}
-             </div>
-           </section>
+      {/* Hero Section */}
+      <section
+        className="py-20"
+        style={{
+          backgroundImage: `url(${rest})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 20%",
+          backgroundRepeat: "no-repeat",
+          backgroundBlendMode: "overlay",
+          position: "relative",
+          minHeight: "80vh",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/30"></div>
+        <div className="relative z-10">
+          <div className="container mx-auto px-6 text-center text-white">
+            <h1
+              className="text-4xl md:text-5xl font-bold mb-4 tracking-tight"
+              style={{
+                textShadow: "2px 2px 8px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 0, 0, 0.5)",
+                opacity: 0.95,
+              }}
+            >
+              Nepal Telecommunication Retired Employees Society (REST)
+            </h1>
+            <p
+              className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed"
+              style={{
+                textShadow: "1px 1px 6px rgba(0, 0, 0, 0.7)",
+                opacity: 0.90,
+              }}
+            >
+              Safeguarding the welfare of retired telecom professionals and harnessing their expertise for national development.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Main Content */}
       <div className="px-6 py-16">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
-          {/* Left Side: Intro Text */}
           <div>
-            <h1 className="text-3xl font-bold mb-6">Welcome to R.E.S.T</h1>
+            <h1 className="text-3xl font-bold mb-6">Welcome to Nepal Telecommunication Retired Employees Society (REST)</h1>
             <p className="mb-4">
-              <strong>R.E.S.T (Retired Employees Support Trust)</strong> is a
-              vibrant community organization dedicated to supporting retired
-              telecommunications professionals throughout their golden years.
-              Since our establishment, we have been committed to fostering
-              connections, providing support, and creating meaningful
-              opportunities for our members.
+              The <strong>Nepal Telecommunication Retired Employees Society (REST)</strong> was established to safeguard and promote the welfare of former employees retired from Nepal Telecommunications Corporation and Nepal Telecom, who receive retirement benefits or pensions.
             </p>
-            <p className=" mb-4">
-              Our organization was born from the recognition that retirement
-              should not mean isolation or disconnection from the professional
-              community that shaped our careers. Instead, it should be a time of
-              continued growth, friendship, and mutual support.
+            <p className="mb-4">
+              We honor these individuals for their service and encourage their continued contribution to the telecommunications sector and social development. Through income-generating and skill-enhancement programs, we harness the knowledge, expertise, and insights of retirees for national development.
             </p>
             <p className="">
-              We believe that the knowledge, experience, and wisdom of our
-              retired members are invaluable assets that should be celebrated
-              and shared. Through our various programs and initiatives, we
-              create platforms for meaningful engagement and lasting
-              relationships.
+              REST serves as a platform to recognize the value of our members and ensure their meaningful engagement post-retirement. Retirement is not an end but a new beginning for growth, contribution, and community support.
             </p>
           </div>
-
-          {/* Right Side: Features */}
           <div className="space-y-6">
             {[
               {
                 icon: <FaUsers size={24} />,
-                title: "Strong Community",
-                desc: "Over 500+ active retired members from various telecommunications backgrounds",
+                title: "Non-Profit Social Organization",
+                desc: "A public interest organization dedicated to the welfare of over 500+ retired telecom professionals across Nepal.",
               },
               {
                 icon: <FaBuilding size={24} />,
-                title: "Established Presence",
-                desc: "Headquartered in Kathmandu with outreach programs across Nepal",
+                title: "Rights and Welfare Protection",
+                desc: "Advocating for the rights, interests, and entitlements of former employees, with headquarters in Kathmandu and nationwide outreach.",
               },
               {
                 icon: <FaHandsHelping size={24} />,
-                title: "Support Network",
-                desc: "Comprehensive support system including healthcare, social activities, and financial guidance",
+                title: "Skill Enhancement and Engagement",
+                desc: "Programs for training, research, and utilizing retired expertise in telecommunications, including collaborations for national development.",
               },
             ].map(({ icon, title, desc }) => (
-              <div
-                key={title}
-                className=" border border-gray-700 rounded-lg p-5"
-              >
+              <div key={title} className="border border-gray-700 rounded-lg p-5">
                 <div className="flex items-start gap-4">
                   <div className="mt-1">{icon}</div>
                   <div>
@@ -97,35 +128,28 @@ function About() {
           </div>
         </div>
 
-        {/* Full-width Vision, Mission, Value Section */}
+        {/* Vision, Mission, Values Section */}
         <section className="py-16 px-6 mt-20 rounded-lg">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Vision, Mission and Value
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Vision, Mission, and Values</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
               {
-                icon: (
-                  <FaLightbulb size={36} className="text-yellow-400 mb-4" />
-                ),
+                icon: <FaLightbulb size={36} className="text-yellow-400 mb-4" />,
                 title: "Vision",
-                text: `To create a supportive and engaging community where retired telecommunications professionals can continue to thrive, share knowledge, and maintain meaningful connections throughout their golden years.`,
+                text: "To create a supportive platform where retired telecommunications professionals can thrive, share their expertise, and contribute to national development and social welfare.",
               },
               {
                 icon: <FaBullseye size={36} className="text-blue-400 mb-4" />,
                 title: "Mission",
-                text: `To provide comprehensive support, resources, and opportunities for social engagement to our retired members, fostering a sense of belonging and continued purpose in the community.`,
+                text: "To safeguard the welfare of retired employees through income-generating programs, skill enhancement, advocacy for rights, and facilitation of their involvement in telecom-related initiatives and disaster response.",
               },
               {
                 icon: <FaAward size={36} className="text-green-400 mb-4" />,
-                title: "Value",
-                text: `We value respect, integrity, community support, and the wisdom that comes with experience. Our commitment is to honor the contributions of our members and create lasting relationships.`,
+                title: "Values",
+                text: "We value respect, integrity, community support, and the wisdom of experience. Our commitment includes honoring contributions, promoting entitlements, and collaborating with similar organizations for consumer rights and sector coordination.",
               },
             ].map(({ icon, title, text }) => (
-              <div
-                key={title}
-                className="border border-gray-700 p-6 rounded-lg text-center"
-              >
+              <div key={title} className="border border-gray-700 p-6 rounded-lg text-center">
                 {icon}
                 <h3 className="text-xl font-semibold mb-2">{title}</h3>
                 <p className="text-sm">{text}</p>
@@ -133,140 +157,67 @@ function About() {
             ))}
           </div>
         </section>
-        {/* members */}
+
+        {/* Members Section */}
         <section className="py-20 px-6 bg-gray-50">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Our Board Members
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Our Central Working Committee</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            {[
-              {
-                name: "Rakesh Adhikari",
-                role: "President",
-                bio: "25+ years in telecommunications with expertise in network infrastructure and management.",
-                image: "https://randomuser.me/api/portraits/men/32.jpg",
-              },
-              {
-                name: "Nabin Thapa",
-                role: "Vice President",
-                bio: "Former regional director with extensive experience in telecommunications policy.",
-                image: "https://randomuser.me/api/portraits/men/33.jpg",
-              },
-              {
-                name: "Deepak Shrestha",
-                role: "Secretary",
-                bio: "20 years experience in administrative management and organizational leadership.",
-                image: "https://randomuser.me/api/portraits/men/34.jpg",
-              },
-              {
-                name: "Sumitra Pokharel",
-                role: "Treasurer",
-                bio: "Financial management specialist with background in telecommunications budgeting.",
-                image: "https://randomuser.me/api/portraits/women/33.jpg",
-              },
-              {
-                name: "Rajesh Gurung",
-                role: "Member",
-                bio: "Technical specialist with expertise in network infrastructure design and implementation.",
-                image: "https://randomuser.me/api/portraits/men/35.jpg",
-              },
-              {
-                name: "Kabita Adhikari",
-                role: "Member",
-                bio: "Communications specialist with focus on community engagement and outreach programs.",
-                image: "https://randomuser.me/api/portraits/women/36.jpg",
-              },
-              {
-                name: "Bishal Magar",
-                role: "Member",
-                bio: "Former operations manager with expertise in organizational development and project execution.",
-                image: "https://randomuser.me/api/portraits/men/37.jpg",
-              },
-              {
-                name: "Hari Gurung",
-                role: "Member",
-                bio: "Human resources expert specializing in retiree affairs and welfare programs.",
-                image: "https://randomuser.me/api/portraits/men/38.jpg",
-              },
-            ].map(({ name, role, bio, image }) => (
+            {currentCommittee.map(({ _id, name, role, bio, profilePic }) => (
               <div
-                key={name}
+                key={_id}
                 className="bg-white rounded-lg shadow overflow-hidden flex flex-col"
               >
-                <div
-                  className="h-48 bg-cover bg-center relative"
-                  style={{ backgroundImage: `url(${image})` }}
-                >
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent text-white p-4">
-                    <h3 className="text-lg font-semibold">{name}</h3>
-                    <p className="text-sm">{role}</p>
-                  </div>
+                <div className="h-48 bg-blue-600 flex items-center justify-center">
+                  {profilePic ? (
+                    <img src={profilePic} alt={name} className="w-24 h-24 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-blue-800 text-white text-3xl font-bold flex items-center justify-center">
+                      {getInitials(name)}
+                    </div>
+                  )}
                 </div>
-                <div className="p-4 text-gray-700 text-sm">{bio}</div>
+                <div className="p-4 text-gray-700">
+                  <h3 className="text-lg font-semibold">{name}</h3>
+                  <p className="text-sm text-gray-500">{role}</p>
+                  <p className="text-sm mt-2">{bio}</p>
+                </div>
               </div>
             ))}
           </div>
+          <div className="text-center mt-12">
+            <Link
+              to="/committees"
+              className="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300"
+            >
+              View All Working Committees
+            </Link>
+          </div>
         </section>
-        {/* message from presedint */}
+
+        {/* Message from Chairman */}
         <section className="py-20 px-6 bg-white text-gray-800">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Message from Our President
-          </h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Message from Our Chairman</h2>
           <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8 items-start">
-            {/* Message Text */}
             <div className="md:col-span-2 space-y-6">
-              <p className="font-semibold">
-                Respected members, greetings and salutations!
-              </p>
-              <p>
-                It brings me immense joy to welcome you to our R.E.S.T community
-                website. As we navigate through our golden years, it's important
-                to remember that retirement is not an end, but a new beginning
-                filled with opportunities for growth, connection, and
-                contribution to our society.
-              </p>
-              <p>
-                Our organization stands as a testament to the enduring bonds
-                forged through years of dedicated service in the
-                telecommunications industry. The knowledge and experience we
-                have accumulated over decades of service are invaluable assets
-                that we must continue to share and celebrate.
-              </p>
-              <p>
-                Through R.E.S.T, we have created a platform where retired
-                professionals can continue to engage meaningfully with their
-                peers, participate in community development activities, and
-                maintain the professional relationships that have enriched our
-                lives.
-              </p>
-              <p>
-                I encourage each of you to actively participate in our events,
-                share your stories and experiences, and help us build an even
-                stronger community for current and future retirees. Together, we
-                can ensure that our retirement years are not just comfortable,
-                but truly fulfilling.
-              </p>
-              <p className="font-semibold">
-                Thank you for being part of this wonderful journey.
-              </p>
+              <p className="font-semibold">Respected members, greetings and salutations!</p>
+              <p>It brings me immense joy to welcome you to our Nepal Telecommunication Retired Employees Society (REST) website. Retirement is not an end but a new beginning for continued contribution to the telecommunications sector and national development.</p>
+              <p>Our Society honors the service of retired employees from Nepal Telecom, safeguarding their welfare through programs that harness their knowledge and expertise. We protect rights, promote entitlements, and facilitate engagement in training, research, and disaster response.</p>
+              <p>Through REST, we advocate for representation in Nepal Telecom initiatives and collaborate with similar organizations to enhance consumer rights and social services.</p>
+              <p>I encourage you to participate in our events, share your experiences, and help build a stronger community that ensures meaningful post-retirement involvement.</p>
+              <p className="font-semibold">Thank you for being part of this wonderful journey.</p>
               <div>
-                <p className="font-bold">Rakesh Adhikari</p>
-                <p>President, R.E.S.T</p>
+                <p className="font-bold">{chairman?.name || "Chairman"}</p>
+                <p>Chairman, REST</p>
               </div>
             </div>
-
-            {/* President Card */}
             <div className="bg-gray-50 rounded-lg shadow text-center p-6">
-              <img
-                src="https://randomuser.me/api/portraits/men/32.jpg"
-                alt="Rakesh Adhikari"
-                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="text-xl font-semibold">Rakesh Adhikari</h3>
-              <p className="text-sm text-gray-500 mb-2">President</p>
+              <div className="w-32 h-32 rounded-full bg-blue-600 text-white text-3xl font-bold flex items-center justify-center mx-auto mb-4">
+                {chairman ? getInitials(chairman.name) : "N/A"}
+              </div>
+              <h3 className="text-xl font-semibold">{chairman?.name || "Chairman"}</h3>
+              <p className="text-sm text-gray-500 mb-2">Chairman</p>
               <p className="text-sm text-gray-600">
-                Leading R.E.S.T with dedication and vision for community
-                excellence
+                {chairman?.bio || "Leading REST with dedication to retiree welfare and community excellence"}
               </p>
             </div>
           </div>

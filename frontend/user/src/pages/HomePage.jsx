@@ -1,4 +1,5 @@
-  import { useState, useEffect } from "react";
+
+import { useState, useEffect } from "react";
 import { FaLightbulb, FaBullseye, FaAward } from "react-icons/fa";
 import axios from "axios";
 import rest from '../assets/rest.jpg';
@@ -44,21 +45,39 @@ function Home() {
     <>
       {/* Hero Section */}
       <section
-        className="py-20 " // Added mt-16 for header clearance
+        className="py-20"
         style={{
           backgroundImage: `url(${rest})`,
-          backgroundSize: 'cover', // Cover full width
-          backgroundPosition: 'center 20%', // Shift image down
-          backgroundRepeat: 'no-repeat', // Prevent tiling
-          backgroundBlendMode: 'overlay', // Blend with gradient
-          // backgroundColor: '#0c1c35', // Solid color fallback
-          position: 'relative', // For overlay
-          minHeight: '80vh', // Ensure height
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 20%',
+          backgroundRepeat: 'no-repeat',
+          backgroundBlendMode: 'overlay',
+          position: 'relative',
+          minHeight: '80vh',
         }}
       >
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/30"></div>
         <div className="relative z-10">
-          {/* Empty as per previous request */}
+          <div className="container mx-auto px-6 text-center text-white">
+            <h1
+              className="text-4xl md:text-5xl font-bold mb-4 tracking-tight"
+              style={{
+                textShadow: '2px 2px 8px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 0, 0, 0.5)',
+                opacity: 0.95,
+              }}
+            >
+              Nepal Telecommunication Retired Employees Society (REST)
+            </h1>
+            <p
+              className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed"
+              style={{
+                textShadow: '1px 1px 6px rgba(0, 0, 0, 0.7)',
+                opacity: 0.90,
+              }}
+            >
+              Safeguarding the welfare of retired telecom professionals and harnessing their expertise for national development.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -91,17 +110,17 @@ function Home() {
             {
               icon: <FaLightbulb size={36} className="text-yellow-400 mb-4" />,
               title: "Vision",
-              text: `To create a supportive and engaging community where retired telecommunications professionals can continue to thrive, share knowledge, and maintain meaningful connections throughout their golden years.`,
+              text: `To create a supportive platform where retired telecommunications professionals can thrive, share their expertise, and contribute to national development and social welfare.`,
             },
             {
               icon: <FaBullseye size={36} className="text-blue-400 mb-4" />,
               title: "Mission",
-              text: `To provide comprehensive support, resources, and opportunities for social engagement to our retired members, fostering a sense of belonging and continued purpose in the community.`,
+              text: `To safeguard the welfare of retired employees through income-generating programs, skill enhancement, advocacy for rights, and facilitation of their involvement in telecom-related initiatives and disaster response.`,
             },
             {
               icon: <FaAward size={36} className="text-green-400 mb-4" />,
               title: "Value",
-              text: `We value respect, integrity, community support, and the wisdom that comes with experience. Our commitment is to honor the contributions of our members and create lasting relationships.`,
+              text: `We value respect, integrity, community support, and the wisdom of experience. Our commitment includes honoring contributions, promoting entitlements, and collaborating with similar organizations for consumer rights and sector coordination.`,
             },
           ].map(({ icon, title, text }) => (
             <div

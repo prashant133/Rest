@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import VerifyOtp from "./pages/verifyOtp";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CommitteeManagement from "./pages/Committee";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,11 @@ const App = () => (
             <Route path="/gallery" element={
               <ProtectedRoute>
                 <Gallery />
+              </ProtectedRoute>
+            } />
+              <Route path="/committe" element={
+              <ProtectedRoute>
+                <CommitteeManagement />
               </ProtectedRoute>
             } />
             <Route path="/setting" element={

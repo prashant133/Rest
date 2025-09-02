@@ -118,11 +118,11 @@ function Membership() {
       return "Phone numbers must be 7-15 digits";
     }
 
-    // Password validation
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    if (!passwordRegex.test(formData.password)) {
-      return "Password must be at least 8 characters long and contain letters and numbers";
-    }
+    // // Password validation
+    // const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    // if (!passwordRegex.test(formData.password)) {
+    //   return "Password must be at least 8 characters long and contain letters and numbers";
+    // }
 
     // File validation
     if (!profilePic) {

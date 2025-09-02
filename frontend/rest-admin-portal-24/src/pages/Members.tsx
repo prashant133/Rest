@@ -64,7 +64,7 @@ const Members: React.FC = () => {
   const [currentMember, setCurrentMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"pending" | "approved" | "all">("pending");
+  const [statusFilter, setStatusFilter] = useState<"pending" | "approved" | "all">("all");
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -155,14 +155,6 @@ const Members: React.FC = () => {
       return "Invalid role selected";
     }
 
-    // Password validation for create
-    if (!isEditMode) {
-      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-      if (!passwordRegex.test(formData.password)) {
-        return "Password must be at least 8 characters long and contain letters and numbers";
-      }
-    }
-
     // File validation
     if (!isEditMode && !profilePic) {
       return "Profile picture is required";
@@ -193,12 +185,18 @@ const Members: React.FC = () => {
     try {
       setLoading(true);
       setError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/user/get-all-users`,
         {
           params: { status: statusFilter === "all" ? undefined : statusFilter },
-          withCredentials: true,
-          headers: { "x-admin-frontend": "true" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "x-admin-frontend": "true",
+          },
         }
       );
 
@@ -240,6 +238,8 @@ const Members: React.FC = () => {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Failed to fetch members"
+          : error instanceof Error
+          ? error.message
           : "An unexpected error occurred";
       setError(errorMessage);
       toast({
@@ -247,6 +247,10 @@ const Members: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorMessage.includes("No authentication token") || (error instanceof AxiosError && error.response?.status === 401)) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     } finally {
       setLoading(false);
     }
@@ -284,11 +288,17 @@ const Members: React.FC = () => {
   const handleEdit = async (member: Member) => {
     try {
       setError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
       const response = await axios.get(
         `${API_BASE_URL}/api/v1/user/get-user/${member._id}`,
         {
-          withCredentials: true,
-          headers: { "x-admin-frontend": "true" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "x-admin-frontend": "true",
+          },
         }
       );
 
@@ -326,6 +336,8 @@ const Members: React.FC = () => {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Failed to fetch member details"
+          : error instanceof Error
+          ? error.message
           : "An unexpected error occurred";
       setError(errorMessage);
       toast({
@@ -333,6 +345,10 @@ const Members: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorMessage.includes("No authentication token") || (error instanceof AxiosError && error.response?.status === 401)) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   };
 
@@ -352,6 +368,10 @@ const Members: React.FC = () => {
 
     try {
       setError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
       const formDataToSend = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         if (value) {
@@ -370,8 +390,8 @@ const Members: React.FC = () => {
           `${API_BASE_URL}/api/v1/user/update-user/${currentMember._id}`,
           formDataToSend,
           {
-            withCredentials: true,
             headers: {
+              Authorization: `Bearer ${token}`,
               "x-admin-frontend": "true",
               "Content-Type": "multipart/form-data",
             },
@@ -386,8 +406,8 @@ const Members: React.FC = () => {
           `${API_BASE_URL}/api/v1/user/register`,
           formDataToSend,
           {
-            withCredentials: true,
             headers: {
+              Authorization: `Bearer ${token}`,
               "x-admin-frontend": "true",
               "Content-Type": "multipart/form-data",
             },
@@ -404,6 +424,8 @@ const Members: React.FC = () => {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Failed to save member"
+          : error instanceof Error
+          ? error.message
           : "An unexpected error occurred";
       setError(errorMessage);
       toast({
@@ -411,6 +433,10 @@ const Members: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorMessage.includes("No authentication token") || (error instanceof AxiosError && error.response?.status === 401)) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   };
 
@@ -421,11 +447,17 @@ const Members: React.FC = () => {
 
     try {
       setError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
       await axios.delete(
         `${API_BASE_URL}/api/v1/user/delete-user/${id}`,
         {
-          withCredentials: true,
-          headers: { "x-admin-frontend": "true" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "x-admin-frontend": "true",
+          },
         }
       );
       toast({
@@ -437,6 +469,8 @@ const Members: React.FC = () => {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Failed to delete member"
+          : error instanceof Error
+          ? error.message
           : "An unexpected error occurred";
       setError(errorMessage);
       toast({
@@ -444,18 +478,28 @@ const Members: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorMessage.includes("No authentication token") || (error instanceof AxiosError && error.response?.status === 401)) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   };
 
   const handleApprove = async (id: string) => {
     try {
       setError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
       await axios.post(
         `${API_BASE_URL}/api/v1/user/approve-membership/${id}`,
         {},
         {
-          withCredentials: true,
-          headers: { "x-admin-frontend": "true" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "x-admin-frontend": "true",
+          },
         }
       );
       toast({
@@ -467,6 +511,8 @@ const Members: React.FC = () => {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Failed to approve membership"
+          : error instanceof Error
+          ? error.message
           : "An unexpected error occurred";
       setError(errorMessage);
       toast({
@@ -474,6 +520,10 @@ const Members: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorMessage.includes("No authentication token") || (error instanceof AxiosError && error.response?.status === 401)) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   };
 
@@ -483,12 +533,18 @@ const Members: React.FC = () => {
     }
     try {
       setError("");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
       await axios.post(
         `${API_BASE_URL}/api/v1/user/decline-membership/${id}`,
         {},
         {
-          withCredentials: true,
-          headers: { "x-admin-frontend": "true" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "x-admin-frontend": "true",
+          },
         }
       );
       toast({
@@ -500,6 +556,8 @@ const Members: React.FC = () => {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Failed to decline membership and delete user"
+          : error instanceof Error
+          ? error.message
           : "An unexpected error occurred";
       setError(errorMessage);
       toast({
@@ -507,6 +565,10 @@ const Members: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorMessage.includes("No authentication token") || (error instanceof AxiosError && error.response?.status === 401)) {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
     }
   };
 
@@ -816,7 +878,7 @@ const Members: React.FC = () => {
                     )}
                   </div>
 
-	snd <div className="grid gap-2">
+                  <div className="grid gap-2">
                     <Label
                       htmlFor="additionalFile"
                       className="text-sm font-medium"
@@ -1014,7 +1076,8 @@ const Members: React.FC = () => {
                   <div className="grid gap-2">
                     <Label
                       htmlFor="serviceStartDate"
-                      className="text-sm font-medium">
+                      className="text-sm font-medium"
+                    >
                       Service Start Date
                     </Label>
                     <Input
@@ -1030,7 +1093,8 @@ const Members: React.FC = () => {
                   <div className="grid gap-2">
                     <Label
                       htmlFor="serviceRetirementDate"
-                      className="text-sm font-medium">
+                      className="text-sm font-medium"
+                    >
                       Service Retirement Date
                     </Label>
                     <Input

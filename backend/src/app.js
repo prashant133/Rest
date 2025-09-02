@@ -23,7 +23,7 @@ app.use(
     },
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-frontend'],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST','PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
 );
 
@@ -44,10 +44,12 @@ app.use(cookieParser());
 const userRouter = require('./routes/userRoutes');
 const eventRouter = require('./routes/eventRoutes');
 const galleryRouter = require('./routes/galeryRoutes');
+const committeeRouter = require('./routes/committeeRoutes');
 
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/event', eventRouter);
-app.use('/api/v1/gallery', galleryRouter);
+app.use('/api/v1/gallery', galleryRouter);  
+app.use('/api/v1/committee-members', committeeRouter);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

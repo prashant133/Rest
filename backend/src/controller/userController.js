@@ -4,7 +4,7 @@ const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
 const { sendOTPController, verifyOTPController } = require("./otpController");
 const { v4: uuidv4 } = require("uuid");
-const validateUserFiles = require("../utils/valiadateUploadedFiles");
+const {validateUserFiles} = require("../utils/valiadateFiles");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
 const cloudinary = require("cloudinary").v2;
 
@@ -249,7 +249,7 @@ const verifyUserOTPLogin = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     };
 
     console.log("Setting cookies:", { accessToken, refreshToken });

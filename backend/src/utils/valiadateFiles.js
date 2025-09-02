@@ -1,4 +1,4 @@
-// utils/fileValidation.js
+// utils/validateFiles.js
 const ApiError = require("./ApiError");
 
 // Validation for event files (expects an array of files from upload.array("files", 10))
